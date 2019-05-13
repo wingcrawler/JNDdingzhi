@@ -1,0 +1,459 @@
+<template>
+  <view class="header">
+    <view class="item">
+      <view class="title">填写诉讼信息</view>
+    </view>
+    <view class="item">
+      <text class="caseType">案件类型</text>
+      <image class="icon" src="../../images/intelligentConsult/icon-caret-right.png"></image>
+      <picker class="select" mode="selector" range="{{caseType}}" value="{{caseTypeIndex}}" bindchange="caseTypePickerSelected">
+        <text>{{caseType[caseTypeIndex] || '请选择'}}</text>
+      </picker>
+    </view>
+    <view class="item" wx:if="{{ involveProperty != 301 }}">
+      <text class="property">涉及财产</text>
+      <view class="yes" @tap="checkYes">
+        <image src="{{yesChecked? '../../images/intelligentConsult/checked.png' : '../../images/intelligentConsult/unchecked.png'}}"></image>
+        <text class="context {{yesChecked? 'checked' : 'unchecked'}}">是</text>
+      </view>
+      <view class="no" @tap="checkNo">
+        <image src="{{noChecked? '../../images/intelligentConsult/checked.png' : '../../images/intelligentConsult/unchecked.png'}}"></image>
+        <text class="context">否</text>
+      </view>
+    </view>
+    <view class="item" wx:if="{{ involveProperty == 301 }}">
+      <text class="property">涉及财产</text>
+      <view class="yes">
+        <image src="../../images/intelligentConsult/unchecked.png"></image>
+        <text class="context unchecked">是</text>
+      </view>
+      <view class="no">
+        <image src="../../images/intelligentConsult/unable_check.png"></image>
+        <text class="context">否</text>
+      </view>
+    </view>
+    <view class="item" wx:if="{{ yesChecked }}">
+      <text class="number">涉及金额</text>
+      <input placeholder='请输入金额' type='number' placeholder-style='color:#999;' bindinput='getNumber' value='{{propertyAmountShow}}'></input>
+      <text class="number">元</text>
+    </view>
+    <view class="buttons">
+      <view class="calculation" @tap="calculation" style="{{yesChecked&&!propertyAmount? 'background-color: #A9A9A9;' : 'background-color: #225689;'}}">计算</view>
+      <view class="clear" @tap="clear">清空</view>
+    </view>
+  </view>
+  <view class="background">
+  </view>
+  <view class="body">
+    <view class="title">
+      诉讼费计算结果
+    </view>
+    <view class="result">
+      <view class="result_item">
+        <view class="text">
+          受理费
+        </view>
+        <view class="number">
+          {{acceptanceFee}}
+        </view>
+        <view class="text">
+          元
+        </view>
+      </view>
+      <view class="under_line"></view>
+      <view class="result_item">
+        <view class="text">
+          执行费
+        </view>
+        <view class="number">
+          {{implementationFee}}
+        </view>
+        <view class="text">
+          元
+        </view>
+      </view>
+      <view class="under_line"></view>
+      <view class="result_item">
+        <view class="text">
+          保全费
+        </view>
+        <view class="number">
+          {{securityFee}}
+        </view>
+        <view class="text">
+          元
+        </view>
+      </view>
+      <view class="under_line"></view>
+    </view>
+  </view>
+  <loading wx:if="{{ loading }}"></loading>
+</template>
+<script>
+import wepy from 'wepy'
+import {ROBOT_URL} from '@/utils/constants'
+import Loading from '@/components/loading'
+export default class assistiveTools extends wepy.page {
+  config = {
+    navigationBarTitleText: '诉讼计算器'
+  };
+
+  data = {
+    caseType: [],
+    caseCode: [],
+    caseCodeSelected: '',
+    involvePropertyArray: [],
+    involveProperty: '',
+    caseTypeIndex: '',
+    yesChecked: false,
+    noChecked: false,
+    acceptanceFee: '',
+    implementationFee: '',
+    securityFee: '',
+    propertyAmount: 0,
+    propertyAmountShow: '',
+    able_calculation: false,
+    loading: false,
+  };
+  components = {
+    loading: Loading
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '石景山在线矛盾纠纷多元化解平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    caseTypePickerSelected(e) {
+      this.caseTypeIndex = e.detail.value
+      this.caseCodeSelected = this.caseCode[e.detail.value]
+      this.involveProperty = this.involvePropertyArray[e.detail.value]
+      this.involvePropertySelected = this.involveProperty
+      this.able_calculation = true
+      if (this.involveProperty === 301) {
+        this.noChecked = true
+        this.yesChecked = false
+      } else {
+        this.noChecked = false
+        this.yesChecked = false
+      }
+      this.$apply()
+    },
+
+    checkYes() {
+      this.yesChecked = true
+      this.noChecked = false
+      this.propertyAmount = 0
+      this.propertyAmountShow = ''
+      this.involvePropertySelected = 302
+      this.$apply()
+    },
+
+    checkNo() {
+      this.yesChecked = false
+      this.noChecked = true
+      this.propertyAmount = 0
+      this.propertyAmountShow = ''
+      this.involvePropertySelected = 301
+      this.$apply()
+    },
+
+    getNumber(e) {
+      if (e.detail.value === '' && this.propertyAmount.length === 1) {
+        this.propertyAmount = 0
+      } else if (e.detail.value > 0) {
+        this.propertyAmount = e.detail.value
+      } else {
+        this.propertyAmount = 0
+      }
+      this.propertyAmountShow = e.detail.value
+      this.$apply()
+    },
+
+    calculation() {
+      if (this.able_calculation) {
+        if ((this.yesChecked && this.propertyAmount) || this.noChecked) {
+          this.loading = true
+          let data = {
+            caseType: this.caseCodeSelected,
+            involveProperty: this.involvePropertySelected,
+            propertyAmount: this.propertyAmount
+          }
+          // 诉讼费计算
+          wx.request({
+            data: data,
+            method: 'POST',
+            url: ROBOT_URL + 'tools/calculation',
+            success: (res) => {
+              console.log(res)
+              this.acceptanceFee = res.data.result.acceptanceFee
+              this.implementationFee = res.data.result.implementationFee
+              this.securityFee = res.data.result.securityFee
+              this.loading = false
+              this.$apply()
+            }
+          })
+        }
+      } else {
+        wx.showToast({
+          title: '先选择案件类型',
+          icon: 'loading',
+          duration: 2000
+        })
+      }
+    },
+
+    clear() {
+      this.propertyAmount = 0
+      this.propertyAmountShow = ''
+      this.acceptanceFee = ''
+      this.implementationFee = ''
+      this.securityFee = ''
+      this.able_calculation = !(this.yesChecked && !this.propertyAmount)
+      this.$apply()
+    },
+  };
+
+  onLoad(options) {
+    // 诉讼费计算器初始界面参数
+    wx.request({
+      method: 'POST',
+      url: ROBOT_URL + 'tools/init',
+      success: (res) => {
+        console.log(res)
+        let result = res.data.result
+        let caseType = []
+        let caseCode = []
+        let involvePropertyArray = []
+        for (var i = 0; i <= result.length - 1; i++) {
+          caseType.push(result[i].caseType)
+          caseCode.push(result[i].caseCode)
+          involvePropertyArray.push(result[i].involveProperty)
+        }
+        this.caseType = caseType
+        this.caseCode = caseCode
+        this.caseCodeSelected = caseCode[0]
+        this.involvePropertyArray = involvePropertyArray
+        this.involveProperty = involvePropertyArray[0]
+        this.$apply()
+      }
+    })
+  }
+}
+</script>
+<style type="text/scss" lang="scss">
+.header {
+  .item {
+    height: 100rpx;
+    width: 100%;
+    border-bottom: 5rpx solid #F7F6F6;
+
+    .title {
+      padding: 30rpx;
+      height: 40rpx;
+      font-weight:bold;
+      font-size: 30rpx;
+      color: #333;
+    }
+
+    .caseType {
+      margin-left: 30rpx;
+      height: 100rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #333;
+    }
+
+    .select {
+      float: right;
+      margin-right: 30rpx;
+      height: 100rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #999;
+    }
+
+    .icon {
+      float: right;
+      height: 30rpx;
+      width: 18rpx;
+      margin-right: 30rpx;
+      margin-top: 35rpx;
+      margin-bottom: 35rpx;
+    }
+
+    .property {
+      margin-left: 30rpx;
+      margin-right: 60rpx;
+      height: 100rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #333;
+    }
+
+    .yes {
+      display: inline-block;
+      height: 100rpx;
+      width: 200rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #333;
+
+      image {
+        height: 30rpx;
+        width: 30rpx;
+      }
+
+      .unchecked {
+        margin-left: 15rpx;
+        line-height: 100rpx;
+        font-size: 30rpx;
+        color: #999;
+      }
+
+      .checked {
+        margin-left: 15rpx;
+        line-height: 100rpx;
+        font-size: 30rpx;
+        color: #333;
+      }
+    }
+
+    .no {
+      display: inline-block;
+      height: 100rpx;
+      width: 200rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #333;
+
+      image {
+        height: 30rpx;
+        width: 30rpx;
+      }
+
+      text {
+        margin-left: 15rpx;
+        line-height: 100rpx;
+        font-size: 30rpx;
+        color: #999;
+      }
+    }
+
+    .number {
+      display: inline-block;
+      margin-left: 30rpx;
+      margin-right: 60rpx;
+      height: 100rpx;
+      line-height: 100rpx;
+      font-size: 30rpx;
+      color: #333;
+    }
+
+    input {
+      vertical-align:middle;
+      display: inline-block;
+      width: 400rpx;
+    }
+  }
+
+  .buttons {
+    height: 150rpx;
+    width: 100%;
+
+    .calculation {
+      display: inline-block;
+      height: 70rpx;
+      line-height: 70rpx;
+      width: 28%;
+      margin-top: 40rpx;
+      margin-bottom: 40rpx;
+      margin-left: 10%;
+      margin-right: 10%;
+      border: 1rpx solid #F4F5F6;
+      border-radius: 15rpx;
+      text-align: center;
+      color: #fff;
+    }
+
+    .clear {
+      display: inline-block;
+      height: 70rpx;
+      line-height: 70rpx;
+      width: 28%;
+      margin-top: 40rpx;
+      margin-bottom: 40rpx;
+      margin-left: 10%;
+      margin-right: 10%;
+      border: 1rpx solid #225689;
+      border-radius: 15rpx;
+      text-align: center;
+    }
+  }
+}
+
+.background {
+  height: 20rpx;
+  width: 100%;
+  background-color: #F7F6F6;
+}
+
+.body {
+  margin-right: 30rpx;
+  margin-left: 30rpx;
+  width: 690rpx;
+
+  .title {
+    font-weight:bold;
+    font-size: 30rpx;
+    color: #333;
+  }
+
+  .result {
+    margin-top: 50rpx;
+    margin-left: 70rpx;
+    margin-right: 100rpx;
+    height: 270rpx;
+    width: 560rpx;
+
+    .result_item {
+      height: 90rpx;
+      width: 560rpx;
+
+      .text {
+        display: inline-block;
+        height: 90rpx;
+        font-size: 30rpx;
+        color: #333;
+      }
+
+      .number {
+        display: inline-block;
+        margin-left: 40rpx;
+        margin-right: 40rpx;
+        width: 330rpx;
+        height: 90rpx;
+        line-height: 90rpx;
+        font-size: 30rpx;
+        font-weight:bold;
+        text-align: center;
+        color: #225689;
+      }
+    }
+
+    .under_line {
+      margin-left: 120rpx;
+      margin-right: 60rpx;
+      height: 2rpx;
+      width: 330rpx;
+      background-color: #2F4F4F;
+    }
+  }
+}
+</style>

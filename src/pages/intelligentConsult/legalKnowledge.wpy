@@ -1,0 +1,458 @@
+<template>
+  <view wx:if="{{ laws_view }}">
+    <view class="v-title">{{ Title_1 }}</view>
+    <view class="v-content" id="laws">
+      <view class="laws"
+        wx:for="{{ laws }}"
+        wx:key="index"
+      >
+        <view class="laws-title">{{ item.title }}</view>
+        <view class="{{ item.laws_folded ? 'laws-context-folded' : 'laws-context'}}">{{ item.context }}</view>
+        <view class="tips" @tap="changeLawsHeight" data-id="{{item.index}}"  wx:if="{{ item.laws_folded }}">全文</view>
+        <view class="tips" @tap="changeLawsHeight" data-id="{{item.index}}" wx:if="{{ item.get_all }}">收起</view>
+      </view>
+    </view>
+    <view class="background"></view>
+  </view>
+  <view wx:if="{{ judicial_view }}">
+    <view class="v-title">{{ Title_2 }}</view>
+    <view class="v-content" id="judicial">
+      <view class="judicial"
+        wx:for="{{ judicial }}"
+        wx:key="index"
+      >
+        <view class="judicial-title">{{ item.title }}</view>
+        <view class="{{ item.judicial_folded ? 'judicial-context-folded' : 'judicial-context'}}">{{ item.context }}</view>
+        <view class="tips" @tap="getJudicialHeight" data-id="{{item.index}}" wx:if="{{ item.judicial_folded }}">全文</view>
+        <view class="tips" @tap="getJudicialHeight" data-id="{{item.index}}" wx:if="{{ item.get_all }}">收起</view>
+      </view>
+    </view>
+    <view class="background"></view>
+  </view>
+
+  <!--<view wx:if="{{ subject_view }}">-->
+    <!--<view class="v-title">{{ Title_3 }}</view>-->
+    <!--<view class="button-area">-->
+      <!--<view class="case">-->
+        <!--<text-->
+          <!--@tap="tap"-->
+          <!--wx:for="{{ RecommendItems }}"-->
+          <!--wx:key="index"-->
+          <!--wx:for-item="item"-->
+          <!--data-special="{{ item }}"-->
+        <!--&gt;{{ item }}</text>-->
+      <!--</view>-->
+    <!--</view>-->
+  <!--</view>-->
+
+  <view class="modal-mask" wx:if="{{showModalStatus}}">
+    <view class="modal-dialog">
+      <view class='modal-content'>
+        <view class="detail_title">
+          <image class="cancel" @tap="hideModal" src="../../images/intelligentConsult/modal_back.png"></image>
+          <view>{{ detail_title }}</view>
+        </view>
+
+        <view scroll-y class="detail_context">
+          <text>{{ detail_context }}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <loading wx:if="{{ loading }}"></loading>
+</template>
+<script>
+import wepy from 'wepy'
+import {ROBOT_URL, Platform} from '@/utils/constants'
+import Loading from '@/components/loading'
+
+export default class legalKnowledge extends wepy.page {
+  config = {
+    navigationBarTitleText: '法律知识'
+  };
+
+  data = {
+    Title_1: '',
+    Title_2: '',
+    Title_3: '',
+    title: '',
+    laws: [],
+    judicial: [],
+    RecommendItems: [],
+    detail_title: '',
+    detail_context: '',
+    judicial_height: 320,
+    laws_height: 320,
+    showModalStatus: false,
+    subject_view: true,
+    judicial_view: true,
+    laws_view: true,
+    judicial_folded: true,
+    laws_folded: true,
+    loading: false,
+  };
+  components = {
+    loading: Loading
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '石景山在线矛盾纠纷多元化解平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    tap (e) {
+      let data = e.target.dataset.special
+      let header = {
+        dsType: this.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+      }
+
+      wx.request({
+        data: data,
+        method: 'POST',
+        header: header,
+        url: ROBOT_URL + 'relate/law/subject/detail',
+        success: (res) => {
+
+          console.log(res.data.detail.context)
+          if (res.data.detail.context === undefined) {
+            wx.showToast({
+              title: '此案例暂无数据',
+              icon: 'none',
+              duration: 2000
+            })
+          } else {
+            this.showModalStatus = true
+            this.detail_title = res.data.detail.title
+            this.detail_context = this.convertHtmlToText(res.data.detail.context)
+            this.$apply()
+          }
+        }
+      })
+    },
+
+    hideModal() {
+      this.showModalStatus = false
+      this.$apply()
+    },
+
+    // 司法解释全文收起
+    getJudicialHeight(e) {
+      this.judicial[e.currentTarget.dataset.id].judicial_folded = !this.judicial[e.currentTarget.dataset.id].judicial_folded
+      this.judicial[e.currentTarget.dataset.id].get_all = !this.judicial[e.currentTarget.dataset.id].get_all
+      this.$apply()
+    },
+
+    // 法律条文全文收起
+    changeLawsHeight(e) {
+      this.laws[e.currentTarget.dataset.id].laws_folded = !this.laws[e.currentTarget.dataset.id].laws_folded
+      this.laws[e.currentTarget.dataset.id].get_all = !this.laws[e.currentTarget.dataset.id].get_all
+      this.$apply()
+    },
+  };
+
+  // 富文本转换为纯文本
+  convertHtmlToText(inputText) {
+    var returnText = '' + inputText
+    returnText = returnText.replace(/<\/div>/ig, '\r\n')
+    returnText = returnText.replace(/<\/li>/ig, '\r\n')
+    returnText = returnText.replace(/<li>/ig, '  *  ')
+    returnText = returnText.replace(/<\/ul>/ig, '\r\n')
+    // -- remove BR tags and replace them with line break
+    returnText = returnText.replace(/<br\s*?>/gi, '\r\n')
+
+    // -- remove P and A tags but preserve what's inside of them
+    returnText = returnText.replace(/<p.*?>/gi, '\r\n')
+    returnText = returnText.replace(/<a.*href='(.*?)'.*>(.*?)<\/a>/gi, ' $2 ($1)')
+
+    // -- remove all inside SCRIPT and STYLE tags
+    returnText = returnText.replace(/<script.*>[\w\W]{1,}(.*?)[\w\W]{1,}<\/script>/gi, '')
+    returnText = returnText.replace(/<style.*>[\w\W]{1,}(.*?)[\w\W]{1,}<\/style>/gi, '')
+    // -- remove all else
+    returnText = returnText.replace(/<(?:.|\s)*?>/g, '')
+
+    // -- get rid of more than 2 multiple line breaks:
+    returnText = returnText.replace(/(?:(?:\r\n|\r|\n)\s*){2,}/gim, '\r\n\r\n')
+
+    // -- get rid of more than 2 spaces:
+    returnText = returnText.replace(/ +(?= )/g, '')
+
+    // -- get rid of html-encoded characters:
+    // returnText=returnText.replace(/ /gi, '')
+    // returnText=returnText.replace(/ & /gi, '&')
+    // returnText=returnText.replace(/ " /gi, '"')
+    // returnText=returnText.replace(/ < /gi, '<')
+    // returnText=returnText.replace(/ > /gi, '>')
+
+    return returnText
+  }
+
+  events = {};
+  onLoad(options) {
+    console.log(options)
+    if (options.status > 0) {
+      this.status = 0
+    } else {
+      this.status = 2
+    }
+
+    this.potentialSuqiu = options.potentialSuqiu
+    this.disputeDescription = options.disputeDescription.split(',')
+    this.dsType = options.dsType
+    this.questionType = options.questionType
+    this.id = options.id.split(',')
+    this.$apply()
+
+    let header = {
+      dsType: this.dsType, platform: Platform, device: 'WeChatApplet'
+    }
+
+    let data = {
+      'id': this.id,
+      'status': this.status,
+      'questionType': this.questionType
+    }
+
+    let data1 = this.disputeDescription
+
+    this.loading = true
+
+    wx.request({
+      data: data,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'relate/law',
+      success: (res) => {
+        this.judicial = res.data.result.judicial
+        if (this.judicial.length === 0) {
+          this.judicial_view = false
+        } else {
+          this.Title_2 = '司法解释'
+        }
+        for (var i = this.judicial.length - 1; i >= 0; i--) {
+          if (this.judicial[i].context.length > 40) {
+            this.judicial[i].judicial_folded = true
+            this.judicial[i].get_all = false
+            this.judicial[i].index = i
+          } else {
+            this.judicial[i].judicial_folded = false
+          }
+        }
+
+        this.laws = res.data.result.laws
+        if (this.laws.length === 0) {
+          this.laws_view = false
+        } else {
+          this.Title_1 = '法律条文'
+        }
+        for (i = this.laws.length - 1; i >= 0; i--) {
+          if (this.laws[i].context.length > 40) {
+            this.laws[i].laws_folded = true
+            this.laws[i].get_all = false
+            this.laws[i].index = i
+          } else {
+            this.laws[i].laws_folded = false
+          }
+        }
+        this.loading = false
+        this.$apply()
+      }
+    })
+
+    wx.request({
+      data: data1,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'relate/law/subject',
+      success: (res) => {
+        this.RecommendItems = res.data.result.collect
+        if (this.RecommendItems.length === 0) {
+          this.subject_view = false
+        } else {
+          this.Title_3 = '推荐专题'
+          this.subject_view = true
+        }
+        this.$apply()
+      }
+    })
+  };
+  // Other properties
+}
+</script>
+<style lang="scss" type="text/scss">
+.v-title{
+  color: #333;
+  font-size: 40rpx;
+  font-weight: bold;
+  padding: 0 4%;
+  margin-top: 40rpx;
+}
+
+.v-content {
+  margin-right: 8%;
+  margin-left: 4%;
+  word-break: break-all;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.v-content-folded {
+  margin-right: 8%;
+  margin-left: 4%;
+  word-break: break-all;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  height: 320rpx;
+}
+
+.judicial {
+  line-height: 30rpx;
+  margin-top: 44rpx;
+  margin-bottom: 70rpx;
+}
+
+.judicial-context {
+  white-space: pre-line;
+  line-height: 46rpx;
+  color: #999;
+  margin-top: 16rpx;
+}
+
+.judicial-context-folded {
+  white-space: pre-line;
+  line-height: 46rpx;
+  color: #999;
+  margin-top: 16rpx;
+  height: 100rpx;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.laws{
+  line-height: 30rpx;
+  margin-top: 44rpx;
+  margin-bottom: 70rpx;
+}
+.laws-title{
+  font-weight: bold;
+}
+.laws-context{
+  white-space: pre-line;
+  line-height: 46rpx;
+  color: #999;
+  margin-top: 16rpx;
+  text-align: left;
+}
+
+.laws-context-folded {
+  white-space: pre-line;
+  line-height: 46rpx;
+  color: #999;
+  margin-top: 16rpx;
+  height: 100rpx;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: left;
+}
+
+.tips {
+  float: right;
+  color: #4798e5;
+  /*font-size: 36rpx;*/
+  /*margin-top: 16rpx;*/
+  height: 40rpx;
+  width: 100%;
+  line-height: 40rpx;
+  text-align: left;
+}
+.judicial-title{
+  font-weight: bold;
+}
+.case {
+  margin-right: 8%;
+  margin-left: 8%;
+  margin-top: 20rpx;
+
+  text{
+    display: inline-block;
+    margin: 20rpx;
+    padding-left: 20rpx;
+    padding-right: 20rpx;
+    text-align: center;
+    height: 48rpx;
+    line-height: 48rpx;
+    background-color: #F0F7FD;
+    color: #93B5DA;
+  }
+}
+
+.modal-mask {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background:rgba(0, 0, 0, .6);
+  overflow: hidden;
+  z-index: 9000;
+  display:flex;
+  display:-webkit-flex;
+  justify-content:center;
+  -webkit-justify-content:center;
+  align-items:center;
+  -webkit-align-items:center;
+}
+.modal-dialog {
+  margin: 20rpx;
+  height: 800rpx;
+  z-index: 9999;
+  background: #f7f6f6;
+  border-radius: 10rpx;
+}
+
+.modal-content{
+  background-color: white;
+  font-size: 30rpx;
+  padding-bottom: 10rpx;
+}
+
+.detail_title {
+  height: 60rpx;
+  text-align: center;
+  background-color: #EFEFF0;
+  color: #225689;
+  padding: 20rpx;
+
+  view{
+    max-width: 500rpx;
+    margin: auto;
+  }
+}
+
+.detail_context {
+  height: 600rpx;
+  margin-left: 8%;
+  margin-right: 8%;
+  margin-top: 20rpx;
+  white-space: pre-wrap;
+  overflow-y: scroll;
+}
+
+.cancel {
+  height: 60rpx;
+  width: 60rpx;
+  float: right;
+  position: relative;
+}
+
+.background {
+  height: 20rpx;
+  width: 100%;
+  background-color: #F6F6F6;
+}
+</style>

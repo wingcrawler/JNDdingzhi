@@ -1,0 +1,856 @@
+<template>
+  <view class="{{ !showModalStatus && !showClassisStatus? 'box' : 'boxhide'}}">
+    <view class="fixedPic" @tap="backMatchCase" wx:if="{{ match }}"><image src="../../images/intelligentConsult/goTop.png"></image></view>
+    <view wx:if="{{ !showModalStatus && !showClassisStatus}}">
+      <view class="v-title">{{ Title_1 }}</view>
+      <view class='con case'>
+        <text wx:for="{{cases.appeals}}" wx:for-item="ca" wx:key='ca' class="chose-txt flex-item {{ca.isActive==true ? 'active' : ''}}"  data-id="{{index}}" data-checked="{{ca.isActive}}" @tap="choseAppeal">{{ca.name}}</text>
+      </view>
+
+      <view class="circle">
+        <canvas canvas-id="ringCanvas" class="canvas"></canvas>
+        <view class="v-content">
+          <view class="size">
+            {{ size }}篇案例
+          </view>
+          <view class="agree">
+            <image src="../../images/intelligentConsult/up_icon.png" class="icon"/>
+            <text>{{ agree_name }}</text>
+            <text class="agree-rate">{{ agree_rate }}</text>
+            <progress percent="{{ agree_rate_int }}" color="#42C370" class="process"/>
+          </view>
+          <view class="against">
+            <image src="../../images/intelligentConsult/down_icon.png" class="icon"/>
+            <text>{{ against_name }}</text>
+            <text class="against-rate">{{ against_rate }}</text>
+            <progress percent="{{ against_rate_int }}" color="#FF4A71" class="process"/>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="v-title">{{ Title_2 }}</view>
+
+    <view class="evidence"
+      wx:for="{{cases.evidence}}"
+      wx:for-item="ce"
+      wx:key='ce'
+      data-size="{{ce.size}}"
+    >
+      <text class="evidence-name">{{ce.name}}</text>
+      <view class="evidence-size" style="width:{{ unit_length * ce.size}}rpx;"></view>
+      <text class="evidence-text">{{ce.size}}</text>
+    </view>
+
+    <view class="classis">
+      <view class="background"></view>
+      <view class="v-title">{{ Title_4 }}</view>
+      <view class="classis-item"
+        wx:for="{{classis}}" wx:key="id"
+      >
+        <view class="title" data-case_id="{{item.id}}" bindtap="getClassisDetail">{{item.title}}</view>
+      </view>
+    </view>
+
+    <view class="match-case" id="relateCase" @tap="handletouchmoveDown">
+      <view class="background"></view>
+      <view class="v-title">{{ Title_3 }}</view>
+      <view class="case-size">{{ cases.appeal.size }}</view>
+    </view>
+
+    <view>
+      <view class="check">
+        <text class="{{ win ? 'checked' : 'unchecked'}}" @tap="getMatchCase" data-bool="true">胜诉</text>
+        <text class="{{ fail ? 'checked' : 'unchecked'}}" @tap="getMatchCase" data-bool="false">败诉</text>
+      </view>
+
+      <view class="match_case_list"
+        wx:for="{{match_case}}"
+        wx:for-item="mc"
+        wx:key='mc'
+        data-link="{{mc.hrefLink}}"
+        data-title="{{mc.case}}"
+        @tap="matchCaseDetail"
+      >
+        <view class="case-name">{{mc.case}}</view>
+        <view class="case-tip">
+          <view class="cese-anyou"
+            wx:for="{{mc.ceseAnyou}}" wx:key="id"
+          >{{ item }}</view>
+
+          <view class="cese-appeal"
+            wx:for="{{mc.ceseAppeal}}" wx:key="id"
+          >{{ item }}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{showModalStatus}}">
+    <view class="modal-dialog">
+      <view class='modal-content'>
+        <view class="detail_title">
+          <view>{{ match_case_title }}</view>
+        </view>
+
+        <view class="detail_context">
+          <view class="detail-item"
+            wx:for="{{match_case_content}}"
+          >
+            <view class="detail-item-title">{{ item.title }}</view>
+            <view class="detail-item-context">{{ item.context }}</view>
+          </view>
+        </view>
+      </view>
+      <view class="cancel" @tap="hideModal">
+        <image src="../../images/intelligentConsult/modal_back.png"></image>
+      </view>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{showClassisStatus}}">
+    <view class="modal-dialog">
+      <view class='modal-content'>
+        <view class="detail_title">
+          <view>{{ classis_detail.title }}</view>
+        </view>
+
+        <view class="detail_context">
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[1] }}</view>
+            <view class="detail-item-context">{{ classis_detail.recommendResource }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[2] }}</view>
+            <view class="detail-item-context">{{ classis_detail.baseInfo }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[3] }}</view>
+            <view class="detail-item-context">{{ classis_detail.keywords }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[4] }}</view>
+            <view class="detail-item-context">{{ classis_detail.caseSummary }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[5] }}</view>
+            <view class="detail-item-context">{{ classis_detail.disputerFocus }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[6] }}</view>
+            <view class="detail-item-context">{{ classis_detail.refereePoint }}</view>
+          </view>
+          <view class="detail-item">
+            <view class="detail-item-title"><view class="tip flex-item"></view>{{ classis_detail_titles[7] }}</view>
+            <view class="detail-item-context">{{ classis_detail.c }}</view>
+          </view>
+        </view>
+      </view>
+      <view class="cancel" @tap="hideClassis">
+        <image src="../../images/intelligentConsult/modal_back.png"></image>
+      </view>
+    </view>
+  </view>
+  <loading wx:if="{{ loading }}"></loading>
+</template>
+<script>
+import wepy from 'wepy'
+import {ROBOT_URL, Platform} from '@/utils/constants'
+import {wxSystem} from '@/utils/utils'
+import Loading from '@/components/loading'
+let WxCharts = require('@/utils/wxcharts.js')
+
+// 绘制ring图
+const paintRingChart = (rate) => {
+  var ring = new WxCharts({
+    animation: true,
+    canvasId: 'ringCanvas',
+    type: 'ring',
+    extra: {
+      ringWidth: 10,
+      pie: {
+        offsetAngle: -45
+      }
+    },
+    title: {
+      name: rate + '%',
+      color: '#469EF5',
+      fontSize: 25
+    },
+    series: [{
+      name: 'win',
+      data: rate,
+      color: '#469EF5',
+      stroke: false
+    },
+    {
+      name: 'fail',
+      data: 100 - rate,
+      color: '#E9EEF3',
+      stroke: false
+    }],
+    disablePieStroke: true,
+    width: 165,
+    height: 165,
+    dataLabel: false,
+    legend: false,
+    background: '#f5f5f5',
+    padding: 0
+  })
+
+  return ring
+}
+
+export default class relateCase extends wepy.page {
+  config = {
+    navigationBarTitleText: '相关案例'
+  };
+
+  data = {
+    Title_1: '诉讼请求',
+    Title_2: '常见证据',
+    Title_3: '相似案例',
+    Title_4: '典型案例',
+    cases: '',
+    lastX: 0,
+    lastY: 0,
+    text: '没有滑动',
+    scroll_height: '',
+    currentGesture: 0,
+    match_case: '',
+    // 是否显示相关案例
+    related_case: true,
+    // 是否显示匹配案例
+    match: true,
+    showModalStatus: false,
+    match_case_title: '',
+    match_case_content: '',
+    win: true,
+    fail: false,
+    size: '',
+    agree_rate: '',
+    against_rate: '',
+    agree_name: '',
+    against_name: '',
+    agree_rate_int: '',
+    against_rate_int: '',
+    unit_length: '',
+    scrollTop: 0,
+    header_height: '',
+    viewId: 'id',
+    // 经典案例数组
+    classis: [],
+    // 经典案例详情数组
+    classis_detail: {},
+    classis_detail_titles: ['', '推荐理由', '基本信息', '关键词', '案情摘要', '争议焦点', '裁判要点', '适用法律'],
+    showClassisStatus: false,
+    loading: false,
+  };
+  components = {
+    loading: Loading
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '石景山在线矛盾纠纷多元化解平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    choseAppeal: function(e) {
+      let appeals = this.cases.appeals
+      for (var i = appeals.length - 1; i >= 0; i--) {
+        if (e.currentTarget.dataset.id === i) {
+          appeals[i].isActive = true
+        } else {
+          appeals[i].isActive = false
+        }
+      }
+      this.cases.appeals = appeals
+      this.$apply()
+
+      let data1 = {
+        anyous: this.anyous,
+        suqiu: appeals[e.currentTarget.dataset.id].name,
+        caseSize: this.cases.caseSize,
+        potentialSuqiu: this.potentialSuqiu || '判决离婚'
+      }
+
+      let header = {
+        dsType: this.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+      }
+
+      wx.request({
+        data: data1,
+        method: 'POST',
+        header: header,
+        url: ROBOT_URL + 'relate/case/appeal',
+        success: (res) => {
+          this.size = res.data.result.appeal.size
+          this.agree_rate = res.data.result.appeal.judgment[0].rate
+          this.against_rate = res.data.result.appeal.judgment[1].rate
+          this.agree_name = res.data.result.appeal.judgment[0].name
+          this.against_name = res.data.result.appeal.judgment[1].name
+          this.agree_rate_int = parseInt(this.agree_rate)
+          this.against_rate_int = parseInt(this.against_rate)
+          this.rate = res.data.result.appeal.rate
+          this.$apply()
+          let rate = parseInt(this.rate)
+          paintRingChart(rate)
+        }
+      })
+    },
+
+    // 查看匹配案例详情
+    matchCaseDetail(e) {
+      let header = {
+        dsType: this.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+      }
+
+      let data = {
+        caseLink: e.currentTarget.dataset.link,
+        caseTitle: e.currentTarget.dataset.title
+      }
+
+      wx.request({
+        data: data,
+        method: 'POST',
+        header: header,
+        url: ROBOT_URL + 'relate/case/cases/detail',
+        success: (res) => {
+          this.match_case_title = res.data.result.caseTitle
+          this.match_case_content = res.data.result.data
+          this.$apply()
+        }
+      })
+
+      this.showModalStatus = true
+      this.$apply()
+    },
+
+    // 获取匹配案例
+    getMatchCase(e) {
+      let data = {
+        page: {
+          pageIndex: 1,
+          pageSize: 10,
+          totalCount: 0
+        },
+        potentialSuqiu: this.potentialSuqiu || '判决离婚',
+        disputeDescription: this.disputeDescription || ['离婚纠纷'],
+        isSupport: e.currentTarget.dataset.bool
+      }
+
+      let header = {
+        dsType: this.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+      }
+
+      this.loading = true
+
+      wx.request({
+        data: data,
+        method: 'POST',
+        header: header,
+        url: ROBOT_URL + 'relate/case/cases',
+        success: (res) => {
+          this.win = !this.win
+          this.fail = !this.fail
+          this.match_case = res.data.result.data
+          this.loading = false
+          this.$apply()
+        }
+      })
+    },
+
+    hideModal() {
+      this.showModalStatus = false
+      this.scroll_height = ''
+      this.$apply()
+      var rate = parseInt(this.rate)
+      paintRingChart(rate)
+    },
+
+    hideClassis() {
+      this.showClassisStatus = false
+      this.scroll_height = ''
+      this.$apply()
+      var rate = parseInt(this.rate)
+      paintRingChart(rate)
+    },
+
+    // 回到相关案例页面
+    backMatchCase() {
+      if (wx.pageScrollTo) {
+        wx.pageScrollTo({
+          scrollTop: 0
+        })
+      } else {
+        wx.showModal({
+          title: '提示',
+          content: '当前微信版本过低，无法使用该功能，请升级到最新微信版本后重试。'
+        })
+      }
+    },
+
+    // 显示匹配案例页面
+    viewMatchCase() {
+      this.scrollTop = this.header_height
+      this.$apply()
+    },
+
+    // 经典案例详细信息
+    getClassisDetail(e) {
+      let data = {
+        caseId: e.currentTarget.dataset.case_id
+      }
+      var header = {
+        platform: Platform, device: 'WeChatApplet'
+      }
+
+      wx.request({
+        data: data,
+        method: 'POST',
+        header: header,
+        url: ROBOT_URL + 'relate/case/classis/detail',
+        success: (res) => {
+          this.classis_detail = res.data.result
+          console.log(res.data.result)
+          this.classis_detail.recommendResource = res.data.result.recommendResource.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.title = res.data.result.title.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.baseInfo = res.data.result.baseInfo.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.keywords = res.data.result.keywords.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.caseSummary = res.data.result.caseSummary.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.disputerFocus = res.data.result.disputerFocus.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.refereePoint = res.data.result.refereePoint.replace(/<br\s*?>/gi, '\r\n')
+          this.classis_detail.applianceLaw = res.data.result.applianceLaw.replace(/<br\s*?>/gi, '\r\n')
+          this.showClassisStatus = true
+          this.$apply()
+        }
+      })
+    }
+  };
+
+  events = {};
+  onLoad(options) {
+    console.log(options)
+    // wx.getSystemInfo({
+    //   success: function(res) {
+    //     console.log(res.windowHeight)
+    //     this.header_height = res.windowHeight
+    //   }
+    // })
+    this.header_height = wxSystem.windowHeight
+    this.potentialSuqiu = options.potentialSuqiu
+    this.disputeDescription = options.disputeDescription.split(',')
+    this.dsType = options.dsType
+    this.$apply()
+    var data = {
+      potentialSuqiu: this.potentialSuqiu || '判决离婚',
+      disputeDescription: this.disputeDescription || ['离婚纠纷']
+    }
+
+    var header = {
+      dsType: this.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+    }
+
+    wx.request({
+      data: data,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'relate/case/frame',
+      success: (res) => {
+        this.cases = res.data.result
+        var widthMax = 0
+        var evidence = this.cases.evidence
+        for (var i = evidence.length - 1; i >= 0; i--) {
+          if (evidence[i].size > widthMax) {
+            widthMax = evidence[i].size
+          }
+        }
+        this.unit_length = 380 / widthMax
+        this.size = res.data.result.appeal.size
+        this.agree_rate = res.data.result.appeal.judgment[0].rate
+        this.against_rate = res.data.result.appeal.judgment[1].rate
+        this.agree_name = res.data.result.appeal.judgment[0].name
+        this.against_name = res.data.result.appeal.judgment[1].name
+        this.agree_rate_int = parseInt(this.agree_rate)
+        this.against_rate_int = parseInt(this.against_rate)
+        this.anyous = res.data.result.anyous
+        this.rate = this.cases.appeal.rate
+        this.$apply()
+        var rate = parseInt(this.rate)
+        paintRingChart(rate)
+      }
+    })
+
+    var data2 = {
+      page: {
+        pageIndex: 1,
+        pageSize: 20,
+        totalCount: 0
+      },
+      potentialSuqiu: this.potentialSuqiu || '判决离婚',
+      disputeDescription: this.disputeDescription || ['离婚纠纷'],
+      isSupport: true
+    }
+
+    wx.request({
+      data: data2,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'relate/case/cases',
+      success: (res) => {
+        this.match_case = res.data.result.data
+        this.$apply()
+      }
+    })
+
+    // 获取经典案例
+    wx.request({
+      data: data2,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'relate/case/cases',
+      success: (res) => {
+        this.classis = res.data.result.classis
+        this.$apply()
+      }
+    })
+  };
+  // Other properties
+}
+</script>
+<style type="text/scss" lang="scss">
+page {
+  width: 100%;
+  height: 100%;
+  font-size: 26rpx;
+}
+
+.box {
+  overflow-y:scroll;
+}
+
+.boxhide {
+  overflow-y: hidden;
+  height: 100%;
+}
+
+.header {
+  width: 100%;
+  height: 100%;
+  padding-top: 30rpx;
+}
+
+.v-title{
+  display: inline-block;
+  color: #333;
+  margin-top: 30rpx;
+  font-size: 40rpx;
+  font-weight: bold;
+  padding: 0 5%;
+  margin-bottom: 20rpx;
+}
+
+.case {
+  display: flex;
+  margin-left: 5%;
+  width: 95%;
+  flex-direction: row;
+}
+
+.case text{
+  float: right;
+  /*padding-right: 20rpx;*/
+  text-align: center;
+  height: 40rpx;
+  width: 150rpx;
+  line-height: 40rpx;
+  margin-right: 5%;
+  border: 1px solid #f7f6f6;
+  border-radius: 6rpx;
+  color: #696969;
+}
+
+.case text.active{
+  color: white;
+  background-color: #469EF5;
+}
+
+.v-content {
+  display: inline-block;
+  margin-right: 5%;
+  margin-left: 5%;
+  width: 40%;
+}
+
+canvas {
+  display: inline-block;
+  width: 40%;
+  height: 300rpx;
+}
+
+.process {
+  border-radius: 10rpx;
+}
+
+.size {
+  display: inline-block;
+  float: right;
+  width: 100%;
+  height: 100rpx;
+  text-align: right;
+}
+
+.agree {
+  display: inline-block;
+  width: 100%;
+  height: 100rpx;
+}
+
+.agree-rate {
+  color: #42C370;
+  margin-left: 20rpx;
+}
+
+.against {
+  display: inline-block;
+  width: 100%;
+  height: 100rpx;
+}
+
+.icon {
+  width: 20rpx;
+  height: 20rpx;
+  margin-right: 20rpx;
+}
+
+.against-rate {
+  color: #FF4A71;
+  margin-left: 20rpx;
+}
+
+.evidence-name {
+  display: inline-block;
+  height: 35rpx;
+  line-height: 35rpx;
+  margin-left: 5%;
+  margin-top: 10rpx;
+  width: 150rpx;
+  text-align: left;
+}
+
+.evidence-size {
+  display: inline-block;
+  height: 30rpx;
+  background-color: #469EF5;
+  height: 25rpx;
+  line-height: 25rpx;
+}
+
+.evidence-text {
+  display: inline-block;
+  height: 25rpx;
+  line-height: 25rpx;
+}
+
+.match-case {
+  height: 150rpx;
+  width: 100%;
+}
+
+.case-size {
+  display: inline-block;
+  background-color: #F0F7FD;
+  color: #469EF5;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
+}
+
+.match_case_list {
+  height: 150rpx;
+  width: 690rpx;
+  margin-left: 30rpx;
+  margin-right: 30rpx;
+  padding-top: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2px solid #f7f6f6;
+}
+
+.case-name {
+  height: 75rpx;
+}
+
+.case-tip{
+  height: 75rpx;
+}
+
+.cese-anyou {
+  display: inline-block;
+  float: right;
+  background-color: #F0F7FD;
+  color: #469EF5;
+  margin-left: 3%;
+}
+
+.cese-appeal{
+  display: inline-block;
+  float: right;
+  background-color: #F0F7FD;
+  color: #469EF5;
+  margin-left: 3%;
+}
+
+.classis {
+  margin-top: 40rpx;
+  margin-bottom: 40rpx;
+
+  .classis-item {
+    width: 100%;
+    color: #469EF5;
+    margin-bottom: 30rpx;
+
+    .title {
+      height: 35rpx;
+      line-height: 35rpx;
+      margin-left: 5%;
+      margin-top: 20rpx;
+      margin-bottom: 20rpx;
+      text-align: left;
+    }
+  }
+}
+
+.modal-mask {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background:rgba(0, 0, 0, .6);
+  overflow: hidden;
+  z-index: 9000;
+  display:flex;
+  display:-webkit-flex;
+  justify-content:center;
+  -webkit-justify-content:center;
+  align-items:center;
+  -webkit-align-items:center;
+}
+
+.modal-dialog {
+  margin: 20rpx;
+  width: 710rpx;
+  height: 800rpx;
+  z-index: 9999;
+  background: #f7f6f6;
+  border-radius: 10rpx;
+}
+
+.modal-content{
+  background-color: white;
+  width: 710rpx;
+  font-size: 30rpx;
+  padding-bottom: 10rpx;
+}
+
+.detail_title {
+  text-align: center;
+  background-color: #EFEFF0;
+  font-weight: bold;
+  color: #469EF5;
+  padding: 20rpx;
+
+  view{
+    max-width: 500rpx;
+    font-weight: bold;
+    margin: auto;
+  }
+}
+
+.detail_context {
+  height: 600rpx;
+  margin-left: 8%;
+  margin-right: 8%;
+  margin-top: 20rpx;
+  white-space: pre-wrap;
+  overflow-y: scroll;
+}
+
+.cancel {
+  margin-top: 120rpx;
+  margin-left: 265rpx;
+  height: 100rpx;
+  width: 200rpx;
+
+  image {
+    height: 60rpx;
+    width: 60rpx;
+    margin-left: 70rpx;
+    margin-top: 20rpx;
+  }
+}
+.check{
+  text-align: center;
+  margin: 30rpx;
+}
+.checked{
+  display: inline-block;
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+  background-color: #469EF5;
+  color: #FFF;
+  border: 1rpx solid #469EF5;
+}
+
+.unchecked{
+  display: inline-block;
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+  color: #999;
+  border: 1rpx solid #696969;
+}
+
+.fixedPic{
+  position: fixed;
+  /*padding-right: 10rpx;*/
+  /*padding-bottom: 20rpx;*/
+  bottom: 100rpx;
+  right: 20rpx;
+  width: 86rpx;
+  height: 86rpx;
+  z-index: 999;
+  /*background-color: #fff;*/
+  /*border-collapse: collapse;*/
+  /*border: 1rpx solid #696969;*/
+
+  image{
+    width: 86rpx;
+    height: 86rpx;
+  }
+}
+
+.background {
+  height: 20rpx;
+  width: 100%;
+  background-color: #F6F6F6;
+}
+
+.detail-item-title {
+  margin-top: 30rpx;
+  margin-bottom: 30rpx;
+  font-size: 30rpx;
+  color: #0C4CA3;
+
+  .tip {
+    display: inline-block;
+    margin-right: 10rpx;
+    height: 30rpx;
+    width: 5rpx;
+    background-color: #0C4CA3;
+  }
+}
+</style>

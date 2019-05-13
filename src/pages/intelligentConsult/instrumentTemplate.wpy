@@ -1,0 +1,170 @@
+<template>
+  <view class="top">
+    <view class="title">
+      <image class="image" src="../../images/intelligentConsult/document.png"/>
+      <view class="tip">文书模板</view>
+    </view>
+
+    <view class="download" @tap="downloadFile">
+      {{ title }}(模板下载)
+    </view>
+  </view>
+
+  <import src="../../wxParse/wxParse.wxml"/>
+    <template class="context" is="wxParse" data="{{wxParseData:article.nodes}}"/>
+  <view class="downloadFile" @tap="downloadFile">
+    {{ title }}(模板下载)
+  </view>
+  <loading wx:if="{{ loading }}"></loading>
+</template>
+<script>
+import wepy from 'wepy'
+import {ROBOT_URL, Platform} from '@/utils/constants'
+import Loading from '@/components/loading'
+const WxParse = require('../../wxParse/wxParse')
+export default class InstrumentTemplate extends wepy.page {
+  config = {
+    navigationBarTitleText: '文书样式'
+  };
+
+  data = {
+    web_url: '',
+    word_url: '',
+    header: {},
+    title: '',
+    loading: false,
+  };
+  components = {
+    loading: Loading
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '石景山在线矛盾纠纷多元化解平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    downloadFile() {
+      wx.downloadFile({
+        url: this.word_url,
+        header: this.header,
+        success: function (res) {
+          var filePath = res.tempFilePath
+          wx.openDocument({
+            filePath: filePath,
+            success: function (res) {
+              console.log('打开文档成功')
+            }
+          })
+        }
+      })
+    },
+  };
+
+  onLoad(options) {
+    console.log(options)
+    let data = {
+      qid: options.qid
+    }
+
+    let header = {
+      dsType: options.dsType || 'marriageFamily', platform: Platform, device: 'WeChatApplet'
+    }
+    this.header = header
+    this.loading = true
+    let that = this
+    // 获得文书详情渲染页面
+    wx.request({
+      data: data,
+      method: 'POST',
+      header: header,
+      url: ROBOT_URL + 'instrument/detail',
+      success: (res) => {
+        let htmlPath = res.data.result.htmlPath
+        let wordPath = res.data.result.wordPath
+        console.log(res.data.result.title)
+        that.title = res.data.result.title.replace(/.docx/g, '')
+        wx.setNavigationBarTitle({
+          title: that.title + '模板',
+        })
+        that.web_url = ROBOT_URL + htmlPath.substring(1, htmlPath.length)
+        that.word_url = ROBOT_URL + wordPath.substring(1, wordPath.length)
+        that.$apply()
+        console.log(that.web_url)
+        wx.request({
+          method: 'GET',
+          url: that.web_url,
+          success: (res) => {
+            let article = res.data.replace(/span/g, 'span ')
+            article = article.replace(/<a/g, '<p ')
+            WxParse.wxParse('article', 'html', article, that, 5)
+            this.loading = false
+            that.$apply()
+          }
+        })
+      }
+    })
+  }
+}
+</script>
+<style type="text/scss" lang="scss">
+.top{
+  display: flex;
+  /*justify-content: space-between;*/
+}
+
+.title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 50rpx;
+  margin-left: 40rpx;
+  margin-top: 20rpx;
+  margin-bottom: 20rpx;
+  width: 360rpx;
+}
+.image {
+  display: inline-block;
+  height: 50rpx;
+  width: 50rpx;
+}
+.tip {
+  display: flex;
+  align-items: center;
+  padding-left: 6rpx;
+  color: #fff;
+  background-color: #255787;
+  height: 50rpx;
+  line-height: 50rpx;
+  width: 160rpx;
+  border-top-right-radius: 25rpx;
+  border-bottom-right-radius: 25rpx;
+}
+.wxParse-html {
+  margin-right: 40rpx;
+  margin-left: 40rpx;
+  width: 670rpx;
+}
+.download {
+  display: inline-block;
+  float: right;
+  margin-right: 40rpx;
+  margin-top: 20rpx;
+  margin-bottom: 20rpx;
+  font-size: 35rpx;
+  color: #469EF5;
+}
+.downloadFile {
+  margin-left: 40rpx;
+  margin-top: 20rpx;
+  margin-bottom: 20rpx;
+  font-size: 35rpx;
+  color: #469EF5;
+}
+@import '../../wxParse/wxParse.wxss';
+</style>

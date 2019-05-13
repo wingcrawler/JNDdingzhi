@@ -1,0 +1,51 @@
+<template>
+  <view class="container">
+    <web-view src="{{ url }}" @message="handleMessage" class="view"></web-view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {getUserInfo, hasToken} from '@/utils/utils'
+
+export default class Webview extends wepy.page {
+  data = {
+    url: ''
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '北京法院多元调解与速裁平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    handleMessage(e) {
+      console.log(e)
+    }
+  }
+
+  onLoad({url, type, typeName}) {
+    if (type) {
+      this.url = decodeURIComponent(url)
+      console.log(this.url)
+      return
+    }
+    if (hasToken) {
+      this.url = decodeURIComponent(url) + '&' + encodeURIComponent(`userName=${getUserInfo().userName}&typeName=${typeName}`)
+    } else {
+      this.url = decodeURIComponent(url) + '&' + encodeURIComponent(`userName=''&typeName=${typeName}`)
+    }
+    console.log('url:' + this.url)
+  }
+}
+</script>
+<style>
+  .view {
+   overflow-scrolling: touch;
+  }
+</style>

@@ -1,0 +1,440 @@
+<template>
+  <view class="container">
+    <view class="zan-panel" style="margin-top: 0">
+      <view class="zan-cell">
+        <view class="zan-cell__hd zan-field__title"><text style="color: #fff;">*</text>是否律师：</view>
+        <view class="zan-cell__bd">
+          <view >{{text}}</view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field" wx:if="{{type === '0'}}">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>执业许可证：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{xkidcard}}" placeholder="请输入您的执业许可证号" type="text" @input="userInput('xkidcard')" />
+      </view>
+      <view class="zan-cell zan-field" wx:if="{{type === '0'}}">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>所属律所：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{lsname}}" placeholder="请输入律所名称" type="text" @input="userInput('lsname')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>姓名：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{username}}" placeholder="请输入您的姓名" type="text" @input="userInput('username')" />
+      </view>
+      <view class="zan-cell">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>证件类型：</view>
+        <view class="zan-cell__bd">
+          <view >{{sftext}}</view>
+          <!-- <view wx:else class="gray-dark text-rgt">请选择</view> -->
+        </view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>证件号码：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{idcard}}" placeholder="请输入您的证件号码" type="idcard" @input="userInput('idcard')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>户籍地址：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{adress}}" placeholder="请输入您的户籍地址" @input="userInput('adress')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>邮寄送达地址：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{yjsdadress}}" placeholder="请输入您的户籍地址" @input="userInput('yjsdadress')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text style="color: #fff;">*</text>电子邮箱：</view>
+        <input class="zan-field__input zan-cell__bd" value="{{email}}" placeholder="请输入您的电子邮箱(选填)" @input="userInput('email')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>登录密码：</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="8-20位数字、字母" type="password" @input="userInput('pass')" maxlength="20" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>确认密码：</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请与上方密码保持一致" type="password" @input="userInput('passconfirm')" maxlength="20" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>手机号：</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入手机号" maxlength="11" type="number" @input="userInput('phone')" />
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>验证码：</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入验证码"  type="number" @input="userInput('msg')" maxlength="6"/>
+        <view class="zan-cell__ft">
+          <button class="zan-btn zan-btn&#45;&#45;mini zan-btn&#45;&#45;primary" @tap="sendmessg" disabled="{{disable}}">{{getmsg}}</button>
+        </view>
+      </view>
+    </view>
+    <!--<view class="rad-box zan-field">-->
+      <!--<radio class="rad" color='#AD3320'></radio>已阅读同意<text class="red">《用户服务协议》</text>-->
+    <!--</view>-->
+    <view style="margin-top: 30px">
+      <view class="btnbox">
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="submit">提交</button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {validate, patterns} from '@/utils/validate'
+  import {sendSMSVerificationCode, saveUserInfo} from '@/api/sign'
+  import MD5 from '@/utils/md5'
+  // import {setItem} from '@/utils/storage'
+  // let RSA = require('../../utils/jsencrypt.js')
+  // let publicKey = ''
+
+  export default class SignupStep3 extends wepy.page {
+    config = {
+      navigationBarTitleText: '注册'
+    }
+    data = {
+      array: [
+        '居民身份证',
+        '军官证',
+        '护照',
+        '港澳居民来往大陆通行证',
+        '台湾公民来往大陆通行证',
+        '律所执业许可证',
+        '社会统一信用代码证',
+        '组织机构代码证',
+        '其他'
+      ],
+      phone: '',
+      msg: '',
+      xkidcard: '',
+      lsname: '',
+      pass: '',
+      email: '',
+      passconfirm: '',
+      yjsdadress: '',
+      adress: '',
+      username: '',
+      idcard: '',
+      getmsg: '获取验证码',
+      disable: false,
+      loading: false,
+      // pickerShow: false,
+      // address: [],
+      agreementUrl: '',
+      text: '',
+      cardCode: '',
+      before: '',
+      lsbefore: '',
+      after: '',
+      sftext: '',
+      type: ''
+    }
+    computed={
+      // addressName() {
+      //   return this.address.map(({name}) => name).join('')
+      // }
+    }
+    onLoad({type, cardCode, before, after, lsbefore}) {
+      this.cardCode = cardCode
+      this.before = before
+      this.lsbefore = lsbefore
+      this.after = after
+      this.type = type
+      if (type === '0') {
+        this.text = '是'
+      } else {
+        this.text = '否'
+      }
+      switch (Number(cardCode)) {
+      case 1:
+        this.sftext = '居民身份证'
+        break
+      case 2:
+        this.sftext = '军官证'
+        break
+      case 3:
+        this.sftext = '护照'
+        break
+      case 4:
+        this.sftext = '港澳居民来往大陆通行证'
+        break
+      case 5:
+        this.sftext = '台湾公民来往大陆通行证'
+        break
+      case 7:
+        this.sftext = '律所执业许可证'
+        break
+      case 21:
+        this.sftext = '社会统一信用代码证'
+        break
+      case 22:
+        this.sftext = '组织机构代码证'
+        break
+      case 255:
+        this.sftext = '其他'
+        break
+      }
+      // this.agreementUrl = encodeURIComponent(`${RZH5URL}mobile/webview.html#/registerAgree`)
+      // getPublicKey().then((data) => {
+      //   publicKey = data
+      //   console.log(publicKey)
+      // })
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+    methods = {
+      // 以下为用户输入事件
+      userInput(field, {detail}) {
+        this[field] = detail.value.trim()
+      },
+      // 发送验证码
+      sendmessg() {
+        if (this.validatephone()) {
+          // wx.showLoading()
+          sendSMSVerificationCode({
+            smstype: '4',
+            phone: this.phone
+          })
+            .then(() => {
+              // wx.hideLoading()
+              wx.showToast({title: '短信验证码已发送至您的手机，请注意查收！', icon: 'none'})
+              this.countdown()
+            })
+            .catch((e) => {
+              console.log(e)
+              wx.showToast({title: e, icon: 'none'})
+              // wx.hideLoading()
+            })
+        }
+      },
+      // 点击注册按钮
+      submit() {
+        if (this.validate()) {
+          this.loading = true
+          // setItem('name', this.phone)
+          // setItem('pwd', this.pass)
+          // wx.showLoading()
+          saveUserInfo({
+            NType: this.type === '0' ? '1' : '4',
+            CName: this.username,
+            NZjlx: this.cardCode,
+            CZjhm: this.idcard,
+            CPhone: this.phone,
+            CEmail: this.email,
+            CSjyzm: this.msg,
+            CPassword: MD5(this.pass),
+            CRpassword: MD5(this.passconfirm),
+            CZyxkzh: this.xkidcard,
+            formType: this.type === '0' ? '1' : '3',
+            rylx: '1',
+            sflx: this.type === '0' ? '2' : '1',
+            sfzmzpZm: this.before,
+            sfzmzpBm: this.after,
+            hjdz: this.address,
+            yjsdd: this.yjsdadress,
+            lszjpFront: this.lsbefore,
+            lsmc: this.lsname,
+            xb: '',
+            mz: '',
+            gj: '',
+            zy: '',
+            gzdw: '',
+            jcjzd: '',
+            yzbm: '',
+            yyzzFront: '',
+            dwmc: '',
+            zzlx: '',
+            zzhm: '',
+            zcd: '',
+            sfyz: '',
+            token: '',
+            jjls: '',
+            sfzyxq: '',
+          }).then((data) => {
+            console.log(data)
+            if (data.code !== 200) {
+              return wx.showToast({title: data.message, icon: 'none'})
+            }
+            wx.showModal({
+              content: '注册成功,请登录.',
+              showCancel: false,
+              success: function({confirm}) {
+                if (confirm) {
+                  wx.navigateBack()
+                }
+              }
+            })
+          }).catch((err) => {
+            console.log(err)
+          })
+          this.loading = false
+          this.$apply()
+          // wx.redirectTo({  // 登录完成跳转 首页
+          //   url: '/pages/home/home'
+          // })
+        }
+      }
+    }
+    // 倒计时
+    countdown(t = 60) {
+      if (--t > 0) {
+        this.disable = true
+        this.getmsg = `${t}s后再次发送`
+        setTimeout(() => this.countdown(t), 1000)
+      } else {
+        this.getmsg = '再次获取验证码'
+        this.disable = false
+      }
+      this.$apply()
+    }
+    validatephone() {
+      return validate({
+        phone: {
+          required: '请输入手机号',
+          pattern: patterns.phone,
+          message: '请输入正确的手机号'
+        },
+      }, this)
+    }
+    validate() {
+      if (this.type === '0') {
+        return validate({
+          xkidcard: {
+            required: '请输入律师执业许可证',
+          },
+          lsname: {
+            required: '请输入律所名称',
+          },
+          username: {
+            required: '请输入姓名',
+          },
+          idcard: {
+            required: '请输入证件号码',
+          },
+          adress: {
+            required: '请输入户籍地址',
+          },
+          pass: {
+            required: '请输入密码',
+            patterns: [{
+              pattern: patterns.passwd,
+              message: '请输入8~20位数字、字母'
+            }]
+          },
+          passconfirm: {
+            required: '请再次输入密码',
+            pattern: val => val === this.pass,
+            message: '两次输入的密码不一致，请重新输入'
+          },
+          phone: {
+            required: '请输入手机号',
+            pattern: patterns.phone,
+            message: '请输入正确的手机号'
+          },
+          msg: {
+            required: '请输入验证码',
+          },
+        }, this)
+      }
+      return validate({
+        username: {
+          required: '请输入姓名',
+        },
+        idcard: {
+          required: '请输入证件号码',
+        },
+        adress: {
+          required: '请输入户籍地址',
+        },
+        pass: {
+          required: '请输入密码',
+          patterns: [{
+            pattern: patterns.passwd,
+            message: '请输入8~20位数字、字母'
+          }]
+        },
+        passconfirm: {
+          required: '请再次输入密码',
+          pattern: val => val === this.pass,
+          message: '两次输入的密码不一致，请重新输入'
+        },
+        phone: {
+          required: '请输入手机号',
+          pattern: patterns.phone,
+          message: '请输入正确的手机号'
+        },
+        msg: {
+          required: '请输入验证码',
+        },
+      }, this)
+    }
+  }
+</script>
+
+<style lang="scss" type="text/scss">
+  @import '../../styles/variables.scss';
+  page {
+    position: relative;
+    height: 100%;
+  }
+  .container{
+    background-color:$white;
+  }
+  .text{
+    font-size: 10px;
+    padding: 10px 15px;
+    text-align: center;
+  }
+  .zan-btn--mini{
+    font-size: 12px;
+    line-height:26px;
+    height:28px;
+  }
+  navigator {
+    display:inline-block;
+    color: #0650ba;
+  }
+
+  .topbor{
+    border-top: 10px solid $background-color;
+  }
+  .zan-field {
+    padding: 0 15px;
+  }
+  .zan-field__title {
+    color: #333;
+    min-width: 65px;
+    padding-right: 10px;
+    font-size: 28rpx;
+    font-weight: bold;
+  }
+  .text-right{
+    text-align: right;
+  }
+  .zan-field__input {
+    flex: 1;
+    line-height: 70rpx;
+    padding: 10px 0;
+    min-height: 70rpx;
+    height: 70rpx;
+    font-size: 28rpx;
+  }
+  .btnbox{
+    width: 80%;
+    margin: 10px auto;
+  }
+  .rad-box {
+    margin-top: 22rpx;
+    vertical-align: middle;
+  }
+  .rad {
+    transform:scale(0.6);
+  }
+  .red {
+    color:  #AD3320;
+  }
+</style>

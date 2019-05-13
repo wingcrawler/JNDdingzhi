@@ -1,0 +1,122 @@
+<template>
+  <picker bindchange="bindPickerChange" value="{{index}}" range="{{array}}">
+    <view wx:if="{{pageType === '1'}}" class="zan-cell picker-cell zan-cell--access zan-hairline--bottom">
+      <view class="zan-cell__icon icon icon-jindutiaochulizhong text-primary"></view>
+      <view class="zan-cell__bd zan-font-14 zan-font-bold" >调解进度:</view>
+      <view class="zan-cell__ft zan-font-bold">{{ array[index] }}</view>
+    </view>
+  </picker>
+
+  <view class="list">
+
+    <view class="nodata-view">
+      <view class="nodata-view__icon"><view class="icon icon-tijianbaogaochaxun"></view></view>
+      <view wx:if="{{pageType === '1'}}" class="nodata-view__label">当前无案件</view>
+      <view wx:else class="nodata-view__label">当前无证据材料</view>
+    </view>
+
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  export default class MyMediate extends wepy.page {
+    config = {
+      // enablePullDownRefresh: true,
+      navigationBarTitleText: ''
+    }
+    data={
+      array: ['请选择', '提交申请', '不受理', '等待调解', '正在调解', '调解成功', '撤回调解', '调解失败'],
+      pageType: '1'
+    }
+
+    onLoad({data}) {
+      let type = JSON.parse(decodeURIComponent(data))
+      console.log(type)
+      if (type === 'mediate') {
+        this.pageType = '1'
+        wx.setNavigationBarTitle({
+          title: '我的案件'
+        })
+      } else {
+        this.pageType = '2'
+        wx.setNavigationBarTitle({
+          title: '证据查看'
+        })
+      }
+    }
+    onShow() {
+
+    }
+    methods={
+      bindPickerChange: function(e) {
+        this.index = e.detail.value
+      }
+    }
+
+  }
+</script>
+
+<style lang="scss" type="text/scss">
+  @import '../../styles/variables';
+
+  page {
+    padding-bottom: 45px;
+  }
+  .picker-cell{
+    border-bottom: 1px solid $gray-light;
+    background-color: $gray-f8;
+  }
+  .section-caption {
+    background-color: $gray-light;
+  }
+
+  .zan-panel + .section-caption {
+    margin-top: 10px;
+  }
+
+  .section-title {
+    font-weight: normal;
+  }
+
+  .break{
+    word-wrap:break-word;
+    width:100%;
+  }
+
+  .zan-field__title,
+  .zan-panel > .zan-panel__title {
+    color: $gray-dark;
+  }
+
+  .nodata-view {
+    width: 100vw;
+    height: calc(100vh - 100px);
+  }
+
+  .btn-group {
+    text-align: right;
+
+    .zan-btn {
+      min-width: 70px;
+      background-color: lighten($primary-color, 62%);
+      border-radius: 20px;
+      &::after {
+        border-radius: 40px;
+      }
+    }
+  }
+
+  .zan-btn {
+    margin-bottom: 0;
+  }
+
+  .fixed-bar .zan-btn {
+    border-radius: 0;
+
+    &::after {
+      border-radius: 0;
+    }
+  }
+</style>

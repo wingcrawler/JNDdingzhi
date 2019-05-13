@@ -1,0 +1,43 @@
+/* color variables */
+$black: #000;
+$white: #fff;
+$red: #f44;
+$blue: #38f;
+$orange: #f5ae2d;
+$orange-light: #f5c98b;
+$green: #06bf04;
+$gray: #ccc;
+$gray-light: #e5e5e5;
+$gray-darker: #666;
+$gray-dark: #999;
+$gray-ef:#efefef;
+$gray-f2:#f2f7fc;
+$gray-f8:#f8f8f8;
+
+$primary-color: #ba261b;
+$disabled-color: $gray;
+$danger-color: #ee7778;
+
+/* default colors */
+$text-color: #222;
+$border-color: #e2e2e2;
+$active-color: #e8e8e8;
+$background-color: #fafafa;
+
+/* button */
+$button-default-color: $text-color;
+$button-default-background-color: $white;
+$button-default-border-color: $gray-light;
+$button-primary-color: $white;
+$button-primary-background-color: $primary-color;
+$button-primary-border-color: lighten($primary-color, 10%);
+$button-danger-color: $white;
+$button-danger-background-color: $danger-color;
+$button-danger-border-color: lighten($danger-color, 10%);
+$button-disabled-color: $disabled-color;
+$button-disabled-background-color: $gray-light;
+$button-disabled-border-color: $border-color;
+$button-bottom-action-default-color: $white;
+$button-bottom-action-default-background-color: $orange;
+$button-bottom-action-primary-color: $white;
+$button-bottom-action-primary-background-color: $red;

@@ -1,0 +1,48 @@
+<template>
+  <view class="tab-content">
+    <view class="tab-pane__wrapper" style="width:{{width}};transform:{{ transform }};">
+      <slot></slot>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class TabContent extends wepy.component {
+  props = {
+    tab: {
+      type: Object,
+      default: {}
+    }
+  }
+
+  computed = {
+    width() {
+      const {
+        list = []
+      } = this.tab
+
+      return Math.max(1, list.length) * 100 + 'vw'
+    },
+    current () {
+      const {
+        list = [],
+        selectedId
+      } = this.tab
+
+      return Math.max(0, list.findIndex(({id}) => id === selectedId))
+    },
+    transform() {
+      const {
+        list = []
+      } = this.tab
+
+      // 偏移量
+      const offset = this.current * (100 / list.length)
+
+      return `translateX(-${offset}%)`
+    }
+  }
+}
+</script>

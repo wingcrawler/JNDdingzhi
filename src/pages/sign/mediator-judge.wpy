@@ -1,0 +1,321 @@
+<template>
+  <view>
+    <view class="type-part">
+      <view class="type-common left" style="{{ selected == 'mediator' ? 'color: #AB3426;' : '' }}" @tap="chageType('mediator')">调解员</view>
+      <view class="type-common right" style="{{ selected == 'judge' ? 'color: #AB3426;' : '' }}" @tap="chageType('judge')">法官</view>
+      <view class="type-flag" style="{{ selected == 'mediator' ? 'left: 25%;' : 'left: 75%;' }}"></view>
+    </view>
+
+    <view style="padding: 100rpx 30px 60rpx 30px">
+      <view class="content-padded">
+        <view class="zan-hairline--bottom">
+          <view class="zan-cell zan-field">
+            <view class="zan-cell__icon icon iconshenfenzheng text-gray"></view>
+            <input class="zan-field__input zan-cell__bd name"  placeholder="{{ selected == 'mediator' ? '请输入用户名' : '请输入账号' }}" value="{{name}}" maxlength="18" type="number" @input="userInput('name')" />
+          </view>
+        </view>
+        <view class="zan-hairline--bottom">
+          <view class="zan-cell zan-field">
+            <view class="zan-cell__icon icon iconsuo zan-font-20 text-gray"></view>
+            <input password="true"  class="zan-field__input zan-cell__bd pass"
+                   placeholder="请输入登录密码"
+                   value="{{pass}}"
+                   @blur="handleBlur"
+                   @focus="handleFocus"
+                   @input="userInput('pass')"
+                   maxlength="16"
+            />
+          </view>
+        </view>
+        <view class="zan-clearfix t">
+          <view wx:if="{{ selected == 'mediator' }}" class="zan-pull-left" @tap="scancode">扫描二维码登录</view>
+          <navigator wx:else class="zan-pull-left" url="../home/real-name-authentication">人脸审核方式</navigator>
+          <navigator url="forget-pass" class="zan-pull-right">忘记密码？</navigator>
+        </view>
+      </view>
+      <view class="content-padded">
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="submit">登录</button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  // import {userSignin, getHomeData, searchCommonUser, getPublicKey} from '@/api/sign' // 引入登录接口
+  import {validate} from '@/utils/validate' // 用户输入表单的验证
+  import {saveUuid, hasUuid, getUuid, saveUserInfo} from '@/utils/utils' // 保存登录后的token,用户信息
+  // import {setItem, getItem} from '@/utils/storage'
+  import {tickets} from '@/api/sign'
+  import makeUuid from '@/utils/uuid'
+  import MD5 from '@/utils/md5'
+  // const CryptoJS = require('../../utils/public.js')
+  // let CryptoJS = require('../../utils/aes.js')
+  let Base64 = require('../../utils/base.js')
+  // let MD5 = require('../../utils/md5.js')
+  // const utils = require('../../utils/md5.js')
+  // import md5 from '@/utils/md5'
+  // let RSA = require('../../utils/jsencrypt.js')
+  // let publicKey = ''
+  export default class MediatorJudge extends wepy.page {
+    config = {
+      navigationBarTitleText: '登录'
+    }
+
+    data = {
+      name: '',
+      pass: '',
+      goBack: false,
+      loading: false,
+      isAndroid: false,
+      fexid: false,
+      selected: 'mediator',
+      haveUuid: false
+      // hasToken: hasToken()
+    }
+    // 用户输入表单验证
+    validate() {
+      return validate({
+        name: {
+          required: '请输入手机号',
+          // pattern: patterns.phone,
+          // message: '请输入正确的手机号'
+        },
+        pass: {
+          required: '请输入8~20位数字、字母',
+          // patterns: [{
+          //   pattern: patterns.passwd,
+          //   message: '请输入8~16位数字、字母，字母需小写'
+          // }, {
+          //   // 不能是大写字母
+          //   pattern: val => !/[A-Z]/.test(val),
+          //   message: '请输入8~16位数字、字母，字母需小写'
+          // }]
+        }
+      }, this)
+    }
+    // RSAEncrypt(data) {
+    //   let encryptObj = new RSA.JSEncrypt()
+    //   encryptObj.setPublicKey(publicKey)
+    //   let data2 = encryptObj.encrypt(data)
+    //   return data2
+    // }
+    onLoad({back}) {
+      this.goBack = !!back
+      try {
+        let res = wx.getSystemInfoSync()
+        let sys = res.system.indexOf('Android')
+        if (sys > -1) {
+          this.isAndroid = true
+          this.$apply()
+        }
+      } catch (e) {
+        // Do something when catch error
+      }
+      // getPublicKey().then((data) => {
+      //   publicKey = data
+      //   console.log(publicKey)
+      // })
+      this.$apply()
+    }
+    onShow() {
+      this.haveUuid = hasUuid()
+      if (this.haveUuid) {
+        this.uuid = getUuid()
+      } else {
+        this.uuid = makeUuid(8, 16)
+        saveUuid(this.uuid)
+      }
+      // getItem('name').then((data = {}) => {
+      //   this.name = data.data
+      // }).catch(() => {
+      //   this.name = ''
+      // })
+      // getItem('pwd').then((data = {}) => {
+      //   this.pass = data.data
+      // }).catch(() => {
+      //   this.pass = ''
+      // })
+      // this.hasToken = hasToken()
+      // this.$apply()
+      // if (this.hasToken) {
+      //   getHomeData() // 检测token 是否过期 新用户注册完成后默认登录保存用户信息
+      //   // 然后进入 实名认证页面 当用户非正常流程退出的时候 比如点了返回键
+      //   // 会返回到登录页面 此时用户实际上已经登录 用此接口判断token是否过期
+      //   // 如果过期就什么也不做 否则就是关闭当前页 返回首页
+      //     .then((data) => {
+      //       wx.navigateBack({
+      //         delta: 2
+      //       })
+      //     }).catch(e => {
+      //       console.log(e.code)
+      //     })
+      // }
+
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+    methods = {
+      handleFocus() {
+        if (this.isAndroid) {
+          this.fexid = true
+          this.$apply()
+        }
+      },
+      handleBlur() {
+        this.fexid = false
+        this.$apply()
+      },
+      chageType(type) {
+        this.selected = type
+        this.$apply()
+      },
+      // 用户输入
+      userInput(field, {detail}) {
+        this[field] = detail.value
+        this.$apply()
+      },
+      submit() {
+        if (this.validate()) {
+          wx.showLoading()
+          let password = MD5(this.pass)
+          console.log(password)
+          tickets({
+            username: '130681198911083211',
+            password: '83bf713fd30a9b0d518873a777c39dd0',
+            token: true,
+            sid: this.uuid,
+          }).then((data) => {
+            console.log(data)
+            console.log('1111')
+            wx.hideLoading()
+          }).catch((data) => {
+            // 函数调用
+            let uesrInfo = JSON.parse(Base64.decode(data.credential))
+            console.log(uesrInfo)
+            saveUserInfo(uesrInfo)
+            // 自己加密
+            console.log(uesrInfo)
+            // var json = JSON.stringify('nihaoa加密')
+            // // 添加具体加密数据，要使用Utf-8转换
+            // var key = CryptoJS.enc.Utf8.parse('k54yQreBXk5pYyp0X5QZuvU0')
+            // var encryptData = CryptoJS.AES.encrypt(json, key, {
+            //   mode: CryptoJS.mode.ECB,
+            //   padding: CryptoJS.pad.Pkcs7
+            // })
+            // console.log(encryptData)
+            // console.log('自己AES解密后：')
+            // var decryptData = CryptoJS.AES.decrypt(encryptData, key, {
+            //   mode: CryptoJS.mode.ECB,
+            //   padding: CryptoJS.pad.Pkcs7
+            // })
+            // // 对数据进行Utf-8设置,便成功解密了数据,生成result
+            // var result = decryptData.toString(CryptoJS.enc.Utf8)
+            // console.log(result)
+
+            wx.hideLoading()
+          })
+          // this.loading = false
+          // if (this.goBack) {
+          //   wx.navigateBack()
+          // } else {
+          //   wx.reLaunch({
+          //     url: '/pages/home/home'
+          //   })
+          // }
+        }
+      },
+      scancode() {
+        wx.scanCode({
+          success: (res) => {
+            console.log(res)
+          }
+        })
+      }
+    }
+  }
+
+</script>
+
+<style lang="scss" type="text/scss">
+  @import "../../styles/variables";
+  page{
+    width: 100vm;
+  }
+  .zan-cell__icon {
+    width: 24px;
+    text-align: center;
+  }
+  .logo {
+    width: 460rpx;
+    height: 230rpx;
+    margin: 100rpx auto 60rpx;
+    display: block;
+  }
+  .zan-field {
+    padding: 8px 10px;
+  }
+  .t {
+    margin-top: 30rpx;
+    margin-left: 3rpx;
+  }
+  .zan-field__input {
+    padding: 3px 0;
+    min-height: 30px;
+    height: auto;
+  }
+  .zan-font-20{
+    font-size: 36rpx;
+  }
+  .zan-pull-left, .zan-pull-right {
+    color: $primary-color;
+  }
+  .fixed-bar--footer {
+    position: fixed;
+    bottom: 40rpx;
+    width: 100%;
+    box-sizing:border-box;
+  }
+  .type-part {
+    width: 100%;
+    height: 100rpx;
+    border-bottom: 1rpx solid #D3D3D3;
+    position: relative;
+  }
+  .type-common {
+    display: inline-block;
+    height: 80rpx;
+    line-height: 80rpx;
+    width: 50%;
+    font-size: 28rpx;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+  }
+  .left {
+    left: 0rpx;
+    transform: translate(0,-50%);
+  }
+  .right {
+    border-left: 1rpx solid #D3D3D3;
+    left: 50%;
+    transform: translate(1rpx, -50%);
+  }
+  .type-flag {
+    width: 25%;
+    height: 6rpx;
+    background-color: #AB3426;
+    position: absolute;
+    bottom: 1rpx;
+    transform: translate(-50%, 0);
+  }
+</style>

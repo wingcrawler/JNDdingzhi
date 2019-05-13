@@ -1,0 +1,178 @@
+<template>
+  <view class="container">
+    <view class="zan-panel" style="margin-top: 0">
+
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">是否律师</view>
+          <view class="zan-cell__bd">
+            <view class="item {{index === '0' ? 'active' : ''}}" @tap="changeClass('0')"><view class="items"><view class="itemyd"></view></view>是</view>
+            <view class="item {{index === '1' ? 'active' : ''}}" @tap="changeClass('1')"><view class="items"><view class="itemyd"></view></view>否</view>
+          </view>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">证件类型</view>
+        <view class="zan-cell__bd">
+          <picker @change="bindPickerChange" value="{{index}}" range="{{array}}">
+            <view class="picker">
+              <!--<text wx:if="{{text}}">请选择</text>-->
+              <view>{{text}}</view>
+            </view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <view class="btnbox">
+
+      <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="modifypass">下一步</button>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  export default class SignupStep1 extends wepy.page {
+    config={
+      navigationBarTitleText: '注册'
+    }
+    data={
+      array: [
+        '居民身份证',
+        '军官证',
+        '护照',
+        '港澳居民来往大陆通行证',
+        '台湾公民来往大陆通行证',
+        '律所执业许可证',
+        '社会统一信用代码证',
+        '组织机构代码证',
+        '其他'
+      ],
+      codeType: [
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '7',
+        '21',
+        '22',
+        '255'
+      ],
+      text: '请选择',
+      loading: false,
+      index: 3,
+      code: ''
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+    methods={
+      // 用户输入
+      changeClass(n) {
+        this.index = n
+        this.$apply()
+        console.log(n)
+      },
+      bindPickerChange({detail}) {
+        console.log('picker发送选择改变，携带值为', detail.value)
+        // this.index = detail.value
+        this.text = this.array[detail.value]
+        this.code = this.codeType[detail.value]
+        this.$apply()
+      },
+      modifypass() {
+        this.loading = true
+        if (this.index === 3) {
+          wx.showToast({title: '请选择是否是律师', icon: 'none'})
+          this.loading = false
+        } else if (this.text === '请选择') {
+          wx.showToast({title: '请选择证件类型', icon: 'none'})
+          this.loading = false
+        } else {
+          wx.navigateTo({
+            url: `signup-step2?type=${this.index}&cardCode=${this.code}`
+          })
+          this.loading = false
+        }
+      }
+    }
+  }
+</script>
+
+<style lang="scss" type="text/scss">
+  @import '../../styles/variables.scss';
+  .container{
+    background-color:$white;
+  }
+  .zan-field {
+    padding: 15px;
+  }
+  .zan-field__title {
+    color: #333;
+    min-width: 65px;
+    padding-right: 10px;
+    font-size: 28rpx;
+    font-weight: bold;
+  }
+  .text-right{
+    text-align: right;
+  }
+  .zan-field__input {
+    flex: 1;
+    line-height: 70rpx;
+    padding: 10px 0;
+    min-height: 70rpx;
+    height: 70rpx;
+    font-size: 28rpx;
+  }
+  .btnbox{
+    width: 80%;
+    margin: 25px auto;
+  }
+  .item {
+    color: $gray;
+    float: left;
+    width: 80rpx;
+    margin-right: 20rpx;
+    &.active {
+      color: $orange;
+      .items {
+        border: 1px solid $orange;
+        .itemyd {
+          width: 8px;
+          height: 8px;
+          background-color: $orange;
+          border-radius: 8px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          margin-top: -4px;
+          margin-left: -4px;
+        }
+      }
+    }
+    .items {
+      width: 16px;
+      height: 16px;
+      border: 1px solid $gray;
+      border-radius:16px;
+      display: inline-block;
+      margin-right: 5px;
+      position: relative;
+      vertical-align: middle;
+    }
+
+    picker {
+      width: 100%;
+      height: 16px;
+    }
+  }
+</style>

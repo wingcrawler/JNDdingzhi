@@ -1,0 +1,142 @@
+<template>
+  <view class="fixed-bar search-bar zan-hairline--bottom {{ invalid ? '' : 'search-bar--active' }}">
+    <view class="search-input">
+      <view class="search-icon icon icon-sousuo-"></view>
+      <input
+        class="search-input__inner"
+        value="{{ value }}"
+        focus="{{ focus }}"
+        placeholder="{{ placeholder }}"
+        confirm-type="{{ confirmType }}"
+        @blur="handleBlur"
+        @focus="handleFocus"
+        @input="handleInput"
+        @change="handleChange"
+        @confirm="handleConfirm"
+      />
+    </view>
+    <!-- <button hidden="{{ invalid }}" class="zan-btn zan-btn--primary zan-btn--text search-btn" @tap.stop="handleCancel">取消</button> -->
+    <view hidden="{{ invalid }}" class="search-btn" @tap.stop="handleCancel">取消</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class SearchBar extends wepy.component {
+  props = {
+    placeholder: {
+      type: String,
+      default: '搜索'
+    },
+    focus: Boolean,
+    confirmType: {
+      type: String,
+      default: 'search'
+    }
+  }
+
+  data = {
+    value: '',
+    isFocus: false,
+    defaultValue: ''
+  }
+
+  computed = {
+    invalid() {
+      return !this.isFocus && !this.value
+    }
+  }
+
+  methods = {
+    handleFocus(e) {
+      clearTimeout(this.__timer)
+      this.isFocus = true
+      this.trigger('focus', e)
+    },
+    handleBlur(e) {
+      this.__timer = setTimeout(() => {
+        this.isFocus = false
+        this.$apply()
+      }, 300)
+      this.trigger('blur', e)
+    },
+    handleInput(e) {
+      this.value = e.detail.value
+      this.trigger('input', e)
+    },
+    handleConfirm(e) {
+      this.trigger('confirm', e)
+    },
+    handleChange(e) {
+      this.trigger('change', e)
+    },
+    handleCancel(e) {
+      this.trigger('cancel', e)
+    }
+  }
+
+  events = {
+    setValue(val) {
+      this.value = val
+    }
+  }
+
+  trigger(type, e) {
+    this.$emit(type, e)
+  }
+}
+</script>
+
+<style lang="scss" type="text/scss">
+@import '../styles/variables';
+
+.search-bar {
+  display: flex;
+  padding: 6px 22px;
+  overflow: hidden;
+  background-color: $white;
+}
+
+.search-bar--active {
+  padding-right: 5px;
+}
+
+.search-input {
+  flex: 1;
+  position: relative;
+  padding-left: 35px;
+  background-color: $gray-light;
+  border-radius: 3px;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  font-family: 'icon-odr';
+  font-size: 16px;
+  line-height: 1;
+  color: $gray-dark;
+  transform: translate(0, -50%);
+}
+.search-input__inner {
+  position: relative;
+  display: block;
+  z-index: 5;
+  height: auto;
+  min-height: 34px;
+  font-size: 14px;
+  line-height: 34px;
+  vertical-align: middle;
+  background-color: transparent;
+  border: none;
+}
+.search-btn {
+  height: 34px;
+  line-height: 34px;
+  width: 15%;
+  /*background-color: gold;*/
+  text-align: center;
+  color: $primary-color;
+}
+</style>

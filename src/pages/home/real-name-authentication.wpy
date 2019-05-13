@@ -1,0 +1,187 @@
+<template>
+    <view class="container">
+      <view class="zan-panel" style="margin-top: 0">
+        <view class="zan-cell zan-field">
+          <view class="zan-cell__hd zan-field__title">真实姓名</view>
+          <input class="zan-field__input zan-cell__bd" @input="userInput('name')" placeholder="请输入真实姓名" type="text" value="{{name}}" />
+        </view>
+        <view class="zan-cell zan-field">
+          <view class="zan-cell__hd zan-field__title">身份证号</view>
+          <input class="zan-field__input zan-cell__bd" @input="userInput('number')" placeholder="请输入身份证号" maxlength="18" type="idcard" value="{{number}}" />
+        </view>
+      </view>
+      <view class="btnbox">
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="next">开始人脸识别</button>
+      </view>
+    </view>
+</template>
+<script>
+    import wepy from 'wepy'
+    // import {getUserInfo, saveUserInfo} from '@/utils/utils'
+    // import {faceRecognition, verifyUser} from '@/api/user'
+    import {setItem} from '@/utils/storage'
+    import {validate} from '@/utils/validate'
+    export default class RealNameAuthentication extends wepy.page {
+      config = {
+        navigationBarTitleText: '身份认证'
+      }
+      data={
+        name: '',
+        number: '',
+        isFaceAuth: false,
+        isRealName: false,
+        loading: false,
+        userInfo: null,
+
+      }
+      onLoad() { // 获取用户信息 并做回显
+        // this.userInfo = getUserInfo()
+        // this.$apply()
+        // this.name = this.userInfo.userName
+        // this.number = this.userInfo.idCard
+        // this.isFaceAuth = this.userInfo.isFacialVerify
+        // this.isRealName = this.userInfo.isRealName
+        // this.$apply()
+      }
+      onShow() {
+        // var isFaceAuth = getItem('isFaceAuth')
+        // if (isFaceAuth) {
+        //   wx.navigateBack({
+        //     delta: 1
+        //   })
+        // }
+      }
+      onShareAppMessage(res) {
+        if (res.from === 'button') {
+          // 来自页面内转发按钮
+          console.log(res.target)
+        }
+        return {
+          title: '石景山在线矛盾纠纷多元化解平台',
+          imageUrl: '/images/home/icon.jpg',
+          path: '/pages/home/home'
+        }
+      }
+      methods={
+        // 用户输入
+        userInput(field, {detail}) {
+          this[field] = detail.value
+        },
+        next() {
+          let that = this
+          that.faceReal()
+          // if (that.validate()) {
+          //   that.loading = true
+          //   verifyUser({ // 调用实名认证接口
+          //     userName: this.name,
+          //     idCard: this.number
+          //   }).then(() => { // 成功 就进入人脸识别方法
+          //     this.loading = false
+          //     that.userInfo.userName = that.name
+          //     that.userInfo.idCard = that.number
+          //     that.userInfo.isRealName = true
+          //     that.$apply()
+          //     saveUserInfo(that.userInfo)
+          //
+          //   }).catch(e => {  // 身份证认证失败 分两种情况 202是已经经过身份证认证
+          //     // 就进入人脸识别方法  其他的代码比如 姓名身份证不匹配  就弹出提示
+          //     console.log(e)
+          //     if (e.message === '用户已经实名过，不能再实名') {
+          //       that.faceReal()
+          //     } else {
+          //       wx.showToast({
+          //         title: e.message,
+          //         icon: 'none',
+          //         duration: 2000
+          //       })
+          //     }
+          //     this.loading = false
+          //     this.$apply()
+          //   })
+          //
+          // }
+        }
+      }
+      faceReal() {
+        let that = this
+        wx.checkIsSupportFacialRecognition({ // 首先检查手机是否支持视频验证
+          success() { // 手机支持视频验证就进入成功方法 不支持进入 fail 方法
+            wx.startFacialRecognitionVerify({  // 手机支持 开启人脸识别
+              name: that.name,
+              idCardNumber: that.number,
+              success() { // 人脸识别认证成功回调，把数据传给后台接口
+                console.log('认证成功')
+                setItem('isFaceAuth', 1)
+                wx.navigateBack({
+                  delta: 1
+                })
+                // faceRecognition().then(data => {
+                //   console.log(data)
+                //   that.userInfo.isFacialVerify = true
+                //   that.$apply()
+                //   saveUserInfo(that.userInfo)
+                //   wx.navigateBack({
+                //     delta: 2
+                //   })
+                // })
+              },
+              fail(res) {
+                console.log(res)
+              }
+            })
+          },
+          fail(res) {  // 手机不支持人脸采集
+            wx.showModal({
+              content: '您的手机不支持人脸采集，请更换手机重新验证',
+              showCancel: false,
+            })
+          }
+        })
+      }
+
+      // 用户表单验证
+      validate() {
+        return validate({
+          name: '请输入真实姓名',
+          number: {
+            required: '请输入身份证号',
+            pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
+            message: '身份证号输入错误'
+          }
+        }, this)
+      }
+    }
+</script>
+
+<style lang="scss" type="text/scss">
+  @import '../../styles/variables';
+    .container{
+      background-color:$white;
+    }
+    .zan-field {
+      padding: 0 15px;
+    }
+    .zan-field__title {
+      color: #333;
+      min-width: 65px;
+      padding-right: 10px;
+      font-size: 28rpx;
+      font-weight: bold;
+    }
+    .text-right{
+      text-align: right;
+    }
+    .zan-field__input {
+      flex: 1;
+      line-height: 1.6;
+      padding: 15px 0;
+      min-height: 22px;
+      height: auto;
+      font-size: 28rpx;
+    }
+    .btnbox{
+      width: 80%;
+      margin: 25px auto;
+    }
+
+</style>

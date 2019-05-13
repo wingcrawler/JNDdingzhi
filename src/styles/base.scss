@@ -1,0 +1,430 @@
+@import 'mixins';
+
+page {
+  font-size: 28rpx;
+  color: $text-color;
+  background-color: $background-color;
+}
+
+.bgcolor{
+  background-color: #eff4ff;
+  border: 1px solid #b4c8f3;
+  color: #618ccf;
+}
+
+/* text */
+.text-default {
+  color: $text-color;
+}
+.text-red {
+  color: $red;
+}
+.text-blue {
+  color: $blue;
+}
+.text-orange {
+  color: $orange;
+}
+.text-gray {
+  color: $gray;
+}
+.gray-dark {
+  color: $gray-dark;
+}
+.article,
+.gray-darker {
+  color: $gray-darker;
+}
+.gray-light {
+  color: $gray-light;
+}
+.text-primary {
+  color: $primary-color;
+}
+.text-link {
+  color: $orange;
+}
+.text-small {
+  font-size: 80%;
+}
+.text-indent {
+  text-indent: 2em;
+}
+
+/* layout */
+.white-bg {
+  background-color: $white;
+}
+.container {
+  font-size: 28rpx;
+  min-height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+  zoom: 1;
+
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+.fixed-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  overflow: hidden;
+
+  &.fixed-bar--footer {
+    top: auto;
+    bottom: 0;
+  }
+}
+.scroll-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+}
+.fixed-bar--footer ~ .scroll-wrapper,
+.fixed-bar--footer + .scroll-wrapper {
+  bottom: 46px;
+}
+.fixed-bar--header ~ .scroll-wrapper,
+.fixed-bar--header + .scroll-wrapper {
+  top: 46px;
+}
+
+.content-padded {
+  padding: 15px;
+}
+
+.section {
+  margin-bottom: 15px;
+}
+.section-caption {
+  padding: 6px 15px;
+}
+.section-title {
+  position: relative;
+  padding-left: 15px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 12px;
+    border-radius: 5px;
+  }
+  &::before {
+    background-color: $primary-color;
+    transform: translate(0, -50%) rotate(15deg);
+  }
+  &::after {
+    background-color: $orange;
+    transform: translate(5px, -50%) rotate(15deg);
+  }
+
+}
+
+.section-caption > .section-title {
+  margin-bottom: 0;
+}
+
+.nodata-view {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  color: $gray;
+}
+.nodata-view__icon {
+  margin-top: -50%;
+
+  > .icon {
+    font-size: 80px;
+  }
+}
+
+/* btn */
+.zan-btn {
+  &.zan-btn--dashed {
+    display: inline-block;
+    min-width: 100px;
+    color: $primary-color;
+    background-color: lighten($primary-color, 60%);
+
+    &::after {
+      border-width: 2px;
+      border-style: dashed;
+    }
+  }
+
+  > .icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: -3px;
+    margin-right: 3px;
+  }
+}
+
+/* cell */
+.zan-cell {
+  font-size: 28rpx;
+}
+
+/* panel */
+.zan-panel {
+  &.no-bd::after {
+    border: none;
+  }
+  &.no-bd--top::after {
+    border-top-width: 0;
+  }
+  &.no-bd--btm::after {
+    border-bottom-width: 0;
+  }
+
+  &.no-mg {
+    margin-top: 0;
+  }
+}
+.zan-panel__title {
+  margin-top: 5px;
+  padding: 6px 15px;
+  color: $gray-darker;
+
+  & + .zan-panel {
+    margin-top: 0;
+  }
+}
+.zan-panel > .zan-panel__title {
+  padding-bottom: 0;
+  color: $text-color;
+}
+.zan-panel__desc {
+  padding: 4px 15px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: $gray-dark;
+}
+
+/* field */
+.zan-field {
+  padding: 5px 15px;
+
+  .zan-field__ft > .zan-btn--mini:last-child {
+    margin-right: -7px;
+  }
+}
+.zan-field__title {
+  min-width: 80px;
+}
+.zan-field__input {
+  flex: 1;
+  padding: 0 6px;
+  font-size: 28rpx;
+  height: 34px;
+  line-height: 34px;
+}
+input.zan-field__input {
+  line-height: 1.6;
+}
+textarea.zan-field__input {
+  height: 100px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.zan-panel__title ~ .zan-field {
+  padding-top: 10px;
+
+  & > textarea.zan-field__input {
+    padding: 8px;
+    font-size: 12px;
+    color: $gray-dark;
+    background-color: $background-color;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+  }
+}
+.zan-cell__icon ~ .zan-field__input {
+  padding-left: 5px;
+}
+
+/* tab */
+.tab-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  overflow: hidden;
+}
+.zan-tab ~ .tab-content {
+  top: 45px;
+}
+.tab-pane__wrapper {
+  display: flex;
+  flex-direction: row;
+  min-width: 100%;
+  height: 100%;
+  transition: transform .35s;
+}
+.tab-pane {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity .35s;
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+/* progress */
+.progress {
+  margin-bottom: 10px;
+}
+.progress-label {
+  color: $gray-dark;
+  margin-bottom: 5px;
+}
+.progress-bar,
+.progress-content {
+  display: flex;
+  align-items: center;
+}
+.progress-text {
+  font-size: 12px;
+
+  &.icon {
+    font-size: 14px;
+  }
+}
+.progress-text--primary {
+  color: $primary-color;
+}
+.progress-text--warn {
+  color: $orange;
+}
+.progress-bar {
+  flex: 1;
+  padding: 0 10px;
+}
+.progress-bar__item {
+  height: 5px;
+
+  &:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+}
+.progress-bar--primary {
+  background-color: $primary-color;
+}
+.progress-bar--warn {
+  background-color: $orange;
+}
+
+/* steps */
+.zan-steps--steps.custom-steps {
+  counter-reset: num;
+
+  .zan-steps__step {
+    padding-top: 30px;
+    padding-bottom: 0;
+    counter-increment: num;
+  }
+
+  .zan-steps__title {
+    font-size: 12px;
+  }
+
+  .zan-steps__step--first-child .zan-steps__title {
+    text-align: center;
+    transform: translateX(-50%);
+  }
+
+  .zan-steps__step--last-child .zan-steps__title {
+    text-align: center;
+    transform: translateX(50%);
+  }
+
+  .zan-steps__step--cur .zan-steps__title,
+  .zan-steps__step--done .zan-steps__title {
+    color: $primary-color;
+  }
+
+  .zan-steps__icons,
+  .zan-steps__step--cur .zan-steps__icons,
+  .zan-steps__step--done .zan-steps__icons {
+    top: 0px;
+    left: 0;
+    transform: translateX(-50%);
+  }
+
+  .zan-steps__step--last-child .zan-steps__icons,
+  .zan-steps__step--last-child.zan-steps__step--cur .zan-steps__icons {
+    left: auto;
+    right: 0;
+    transform: translateX(50%);
+  }
+
+  .zan-steps__icons {
+    padding: 2px;
+    color: $gray-dark;
+    border: 1px solid $border-color;
+    border-radius: 50%;
+
+    .zan-steps__circle {
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      line-height: 20px;
+      text-align: center;
+      background-image: none;
+
+      &::before {
+        content: counter(num);
+      }
+    }
+  }
+
+  .zan-steps__step--cur .zan-steps__icons,
+  .zan-steps__step--done .zan-steps__icons {
+    color: $white;
+
+    .zan-steps__circle {
+      color: $white;
+      background-image: none;
+      background-color: $primary-color;
+    }
+  }
+
+  .zan-steps__line {
+    top: 13px;
+  }
+
+  .zan-steps__step--done .zan-steps__line {
+    background-color: $primary-color;
+  }
+}

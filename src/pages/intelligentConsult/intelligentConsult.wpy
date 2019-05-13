@@ -1,0 +1,1395 @@
+<template>
+	<scroll-view  scroll-into-view="msg{{toView}}" scroll-y="true"  class="scrollMsg" >
+		<!-- <view class="msgBox"> -->
+		<repeat for="{{msgList}}" key="index" index="index" item="item">
+      <view class="timeBox" wx:if="{{item.time}}">
+        <view class="msgTime">{{item.isToday? item.time.detailData : item.time.fullDate}}</view>
+      </view>
+			<view class="item left" wx:if="{{item.roleFlag=='1'}}"  id="msg{{index}}" >
+				<image src="/images/intelligentConsult/head.png" class="headPic"></image>
+				<view class="msgContent">
+					<view class="content">
+						<view class="triangle-left"></view>
+						<view class="context" @longpress="longtap({{index}})">
+							<!-- 文本 start-->
+							<view wx:if="{{item.status=='0'}}">{{item.data}}</view>
+
+							<view wx:if="{{item.status=='1' && !item.instrument}}">
+                <text wx:if="{{!item.showMore}}">{{item.data.searchResults.result[0].answer}}</text>
+                <text wx:if="{{item.showMore}}">{{item.more}}</text>
+                <text wx:if="{{item.data.isSimpleAnswer === 1 && !item.showMore}}">...</text>
+                <view class="more" wx:if="{{item.data.isSimpleAnswer === 1}}" @tap="getMore({{item.data.searchResults.result[0].qid}},{{item.data.isSimpleAnswer}},{{item.data.currenType}},{{index}})">{{!item.showMore?'更多':'收起'}}</view>
+              </view>
+
+              <!-- 文书样式 end -->
+              <view class="relatedLaws" wx:if="{{item.status=='1' && item.instrument}}" @tap="getInstrument({{item.data}})">
+                <image src="../../images/intelligentConsult/document.png"></image>
+                <view class="lawRight">
+                  <view class="title">文书样式</view>
+                  <view>{{item.data.instrument.title}}</view>
+                </view>
+              </view>
+              <!-- 文书样式 end -->
+
+							<view wx:if="{{item.status=='5'||item.status=='6'||item.status=='8'}}">{{item.data.info}}</view>
+							<!-- 文本 end -->
+
+							<!-- 法律知识 start-->
+							<view class="relatedLaws" wx:if="{{item.status=='52'}}" @tap="relatedLaws({{item.data}})">
+								<image src="../../images/intelligentConsult/logic.png"></image>
+								<view class="lawRight">
+									<view class="title">法律知识</view>
+									<view>相关法律条款，专题知识</view>
+								</view>
+							</view>
+							<!-- 法律知识 end -->
+							<!-- 相关案例 start -->
+							<view class="relatedLaws" wx:if="{{item.status=='53'}}" @tap="relatedCases({{item.data}})">
+								<image src="../../images/intelligentConsult/relate_case.png"></image>
+								<view class="lawRight">
+									<view class="title">相关案例</view>
+									<view>相关案例资料及诉求支持率、常见证据</view>
+								</view>
+							</view>
+							<!--&lt;!&ndash; 人工咨询 start &ndash;&gt;-->
+							<!--<view class="relatedLaws" wx:if="{{item.status=='51'}}" @tap="consult({{item.data}})">-->
+								<!--<image src="../../images/intelligentConsult/logic.png"></image>-->
+								<!--<view class="lawRight">-->
+									<!--<view class="title">人工咨询</view>-->
+									<!--<view>专业咨询师在线法律咨询服务</view>-->
+								<!--</view>-->
+							<!--</view>-->
+							<!-- 常见问题 S -->
+							<view class="commonProblem" wx:if="{{item.status=='00'}}" >
+								<view>{{item.data.title}} <text class="changeList" wx:if="{{item.data.question.length>5}}" @tap="lawPocedureRefresh({{index}})">换一组</text></view>
+								<repeat for="{{item.arrayShow}}" key="indexs" index="indexs" item="items">
+									<view class="navigator listItems" @tap="questionClick({{items.value}},'4',{{items.key}},{{uuId}},'',{{item.data.questionClass}})">
+										<view class="spot">·</view>
+										<view class="commonProblemItem">{{items.value}}</view>
+									</view>
+								</repeat>
+							</view>
+							<!-- 常见问题 E -->
+							<!-- status==2 -->
+							<view class="commonProblem" wx:if="{{item.status=='2'}}" >
+								<view>{{item.data.info}} <text class="changeList" wx:if="{{item.data.searchResults.result.length>5}}" @tap="searchResultRefresh({{index}})">换一组</text></view>
+								<repeat for="{{item.arrayShow}}" key="indexs" index="indexs" item="items">
+									<view class="navigator listItems" @tap="questionClick({{items.question}},'4',{{items.qid}},{{uuId}},'',{{item.data.searchResults.questionClass}})">
+										<view class="spot">·</view>
+										<view class="commonProblemItem">{{items.question}}</view>
+									</view>
+								</repeat>
+							</view>
+
+              <!-- status==9 -->
+              <view class="commonProblem" wx:if="{{item.status=='9'}}" >
+                <view>{{item.title}} <text class="changeList" @tap="disputeTypeRefresh({{index}})">换一组</text></view>
+                <repeat for="{{item.arrayShow}}" key="indexs" index="indexs" item="items">
+                  <view class="navigator listItems" @tap="getStart({{items.en}})">
+                    <view class="spot">·</view>
+                    <view class="commonProblemItem">{{items.ch}}</view>
+                  </view>
+                </repeat>
+              </view>
+
+							<!-- status==3 单选-->
+							<view class="commonProblem" wx:if="{{item.status=='3'&&item.data.askQuestion[0].type=='radio'}}" >
+								<view>{{item.data.askQuestion[0].question}}</view>
+								<repeat for="{{item.data.askQuestion[0].cAnswer}}" key="indexs" index="indexs" item="items">
+									<view class="navigator listItems" @tap="mockClick({{items}},{{uuId}},'radio',{{currenType}},{{item.isSelected}},{{index}})">
+										<view class="spot">·</view>
+										<view class="commonProblemItem">{{items}}</view>
+									</view>
+								</repeat>
+							</view>
+
+							<!--  status==3 多选 S-->
+							<view class="mutiChoose" wx:if="{{item.status=='3'&&item.data.askQuestion[0].type=='checkbox'}}">
+								<view>{{item.data.askQuestion[0].question}}</view>
+								<repeat for="{{item.arrayShow}}" key="indexs" index="indexs" item="items">
+									<view class="navigator listItems boxItem {{items.selected?'selectedColor':''}}" @tap="mutiItemClick({{item.isSelected}},{{index}},{{indexs}},{{item}})">
+										<image src="{{items.selected?'../../images/intelligentConsult/checkbox_ed.png':'../../images/intelligentConsult/checkbox.png'}}"></image>
+										<view>{{items.key}}</view>
+									</view>
+								</repeat>
+								<button class="mutiConfirm" @tap="mockMutiClick({{uuId}},'checkbox',{{currenType}},{{item.isSelected}},{{index}})">确定</button>
+							</view>
+							<!-- 多选 E -->
+						</view>
+					</view>
+					<!--<view class="time">-->
+						<!--<image src="../../images/intelligentConsult/timer.png" class="timerIcon"></image>-->
+						<!--<text class="msgTime">{{item.time}}</text>-->
+					<!--</view>-->
+					<!-- <view class="delet">
+						<view class="deletOne deletItem" @tap='deletOne({{index}})'>删除此条</view>
+						<view class="deletAll deletItem" @tap='deletAll()'>清空全部</view>
+					</view> -->
+				</view>
+			</view>
+
+			<view class="item right" wx:if="{{item.roleFlag=='0'}}" id="msg{{index}}" @longpress="longtap({{index}})">
+				<image src="{{avatarUrl}}" class="headPic" @error="onError"></image>
+				<view class="msgContent">
+					<view class="content">
+						<view class="triangle-right"></view>
+						<view class="userSend">{{item.data}}</view>
+					</view>
+					<!--<view class="time">-->
+						<!--<image src="../../images/intelligentConsult/timer.png" class="timerIcon"></image>-->
+						<!--<text class="msgTime">{{item.time}}</text>-->
+					<!--</view>-->
+					<!-- <view class="delet">
+						<view class="deletOne deletItem" @tap='deletOne({{index}})'>删除此条</view>
+						<view class="deletAll deletItem" @tap='deletAll()'>清空全部</view>
+					</view> -->
+				</view>
+			</view>
+		</repeat>
+		<!-- </view> -->
+	</scroll-view>
+	<view class='chat-box'>
+		<!-- <image src="../../images/intelligentConsult/voice.png" class="voice"></image> -->
+		<input @input="handleInput" type="text"  value="{{ msg }}" confirm-type="send" @confirm="handleSend" @longpress='getClipboardData'></input>
+		<button @tap="handleSend">发送</button>
+	</view>
+	<!-- 解纷方式 -->
+	<!--<view class="fixedPic" @tap="disputeResolution()"><image src="../../images/intelligentConsult/consultPic.png"></image></view>-->
+  <!-- 辅助工具 -->
+  <!--<view class="fixedToolPic" @tap="assistiveTools()"><image src="../../images/intelligentConsult/tools.png"></image></view>-->
+  <!-- 免责提示 -->
+  <view class="scrollBg" wx:if="{{isShowTitle&&isShowBol}}">
+    <view class="scrollTitle">
+      <image src="/images/intelligentConsult/title.png"></image>
+    </view>
+    <view class="scrollBox">
+      本次咨询系我们基于咨询人提供的信息，并结合对法律的理解作出，仅供参考，本次咨询不能替代任何司法判决或证据使用，不能代表法院观点。
+    </view>
+    <view class="scrollClose" @tap="closeBtnTitle()">
+      <image src="/images/intelligentConsult/close-title.png"></image>
+    </view>
+  </view>
+  <loading wx:if="{{ loading }}"></loading>
+</template>
+<script>
+import wepy from 'wepy'
+import {ROBOT_SOCKET_URL, ROBOT_URL, Platform} from '@/utils/constants'
+import {hasToken} from '@/utils/utils'
+import Loading from '@/components/loading'
+
+var count = null
+const showAlert = (msg) => {
+  return new Promise((resolve, reject) => {
+    wx.showModal({
+      title: '提示',
+      content: msg,
+      showCancel: false,
+      complete: resolve
+    })
+  })
+}
+
+const dateformat = (date, format = 'yyyy-MM-dd') => {
+  if (!(date instanceof Date)) return ''
+
+  const o = {
+    'M+': date.getMonth() + 1, // month
+    'd+': date.getDate(),    // day
+    'h+': date.getHours(),   // hour
+    'm+': date.getMinutes(), // minute
+    's+': date.getSeconds(), // second
+    'q+': Math.floor((date.getMonth() + 3) / 3),  // quarter
+    'S': date.getMilliseconds() // millisecond
+  }
+
+  if (/(y+)/.test(format)) {
+    format = format.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
+  }
+
+  for (let k in o) {
+    if (new RegExp('(' + k + ')').test(format)) {
+      format = format.replace(RegExp.$1, RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length))
+    }
+  }
+
+  return format
+}
+
+const trim = (s = '') => {
+  return s.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '')
+}
+
+export default class intelligentConsult extends wepy.page {
+  config = {
+    navigationBarTitleText: '在线智能咨询'
+  };
+
+  data = {
+    consultContent: '',
+    msgList: [],
+    toView: '',
+    connected: false,
+    socketRequest: 0, // websocket连接失败次数
+    msg: '',      // input值
+    lastRadioIndex: 0,
+    lastCheckboxIndex: 0,
+    checkboxArr: [],
+    mutiConfirmDisabled: true,
+    sendDisabled: true,
+    dsType: 'primary',
+    uuId: '',
+    currenType: ' ',
+    relatedCases: {}, // 相关案件
+    relatedLaws: {}, // 法律知识
+    disputeSolution: '', // 解纷方式
+    userInfo: null,
+    wxUserInfo: null, // 用户微信信息
+    time: {
+      stamp: 0,
+      timeToMinit: 0
+    },
+    isMock: false,
+    imgerror: false,
+    disputeType: [], // 纠纷类型
+    actionSheet1: ['删除此条', '删除所有'],
+    actionSheet2: ['删除此条', '删除所有', '复制此内容'],
+    loading: false,
+    isShowTitle: false,
+    isShowBol: true
+  };
+  components = {
+    loading: Loading
+  }
+
+  computed={
+    avatarUrl() {
+      // 服务器返回的用户头像
+      // 更新用户信息
+      this.userInfo = wx.getStorageSync('wxUserInfo')
+      let data = this.userInfo
+      if (data && data.avatarUrl && !this.imgerror) {
+        if (data.avatarUrl.indexOf('?') > 0) {
+          return data.avatarUrl
+        }
+
+        return `${data.avatarUrl}?_=${this.time.stamp}`
+      }
+
+      if (this.imgerror) {
+        // return '/images/sign/avatar_default.png'
+        return '../../images/intelligentConsult/guest.png'
+      }
+
+      // 微信头像
+      data = this.wxUserInfo
+      if (data && data.avatarUrl) {
+        return data.avatarUrl
+      }
+
+      // 默认头像
+      // return '/images/sign/avatar_default.png'
+      return '../../images/intelligentConsult/guest.png'
+    },
+  };
+
+  methods={
+    onError() {
+      this.imgerror = true
+      this.$apply()
+      console.log(this.imgerror)
+    },
+
+    // 常见问题换一组
+    lawPocedureRefresh(index) {
+      var item = this.msgList[index]
+      var num = item.showArrayNum
+      if (num <= item.data.question.length - 1) {
+        item.arrayShow = item.data.question.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+
+      } else {
+        item.showArrayNum = 0
+        item.arrayShow = item.data.question.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+      }
+      this.$apply()
+    },
+
+    // 搜索结果换一组
+    searchResultRefresh(index) {
+      var item = this.msgList[index]
+      var num = item.showArrayNum
+      // if (num === 10) {
+      //   item.showArrayNum = 0
+      //   item.arrayShow = item.data.searchResults.result.slice(item.showArrayNum, item.showArrayNum + 5)
+      //   item.showArrayNum = item.showArrayNum + 5
+      //   return this.$apply()
+      // }
+      if (num <= item.data.searchResults.result.length - 1) {
+        item.arrayShow = item.data.searchResults.result.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+      } else {
+        item.showArrayNum = 0
+        item.arrayShow = item.data.searchResults.result.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+      }
+      this.$apply()
+    },
+
+    // status=9搜索结果换一组
+    disputeTypeRefresh(index) {
+      var item = this.msgList[index]
+      var num = item.showArrayNum
+      if (num <= item.disputeTypeArr.length - 1) {
+        item.arrayShow = item.disputeTypeArr.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+      } else {
+        item.showArrayNum = 0
+        item.arrayShow = item.disputeTypeArr.slice(item.showArrayNum, item.showArrayNum + 5)
+        item.showArrayNum = item.showArrayNum + 5
+      }
+      this.$apply()
+    },
+
+    // 相似问题，常见问题点击
+    questionClick(val, status, textValue, uuId, type, disputeType) {
+      this.loading = true
+      var time = this.getTime()
+      var parsem = {'roleFlag': '0', 'data': val, 'time': time, 'status': '999'}
+      parsem.isToday = true
+      if (parsem.time.timeToMinit === this.time.timeToMinit) {
+        parsem.time = ''
+      }
+      this.msgList.push(parsem)
+      this.toView = this.msgList.length - 1
+      this.sendSocketMessage(status, textValue, uuId, type, disputeType)
+      this.time.stamp = time.stamp
+      this.time.timeToMinit = time.timeToMinit
+      this.$apply()
+    },
+
+    // 设计问题单选
+    mockClick(textValue, uuId, type, disputeType, selected, index) {
+      if (!selected && index === this.lastRadioIndex && this.isMock) {
+        this.loading = true
+        var time = this.getTime()
+        var parsem = {'roleFlag': '0', 'data': textValue, 'time': time, 'status': '999'}
+        var status = '3'
+        parsem.isToday = true
+        if (parsem.time.timeToMinit === this.time.timeToMinit) {
+          parsem.time = ''
+        }
+        this.msgList.push(parsem)
+        this.toView = this.msgList.length - 1
+        this.sendSocketMessage(status, textValue, uuId, type, disputeType)
+        this.msgList[index].isSelected = true
+        this.time.stamp = time.stamp
+        this.time.timeToMinit = time.timeToMinit
+        this.$apply()
+      } else {
+        return false
+      }
+    },
+
+    // 设计问题多选选项点击
+    mutiItemClick(selected, index, indexs, item) {
+//        console.log(this.lastCheckboxIndex)
+      if (!selected && index === this.lastCheckboxIndex && this.isMock) {
+        this.msgList[index].arrayShow[indexs].selected = !this.msgList[index].arrayShow[indexs].selected
+        this.$apply()
+      } else {
+        return false
+      }
+    },
+
+    // 设计问题多选确定
+    mockMutiClick(uuId, type, disputeType, selected, index) {
+      if (!selected && index === this.lastRadioIndex && this.isMock) {
+        this.loading = true
+        var time = this.getTime()
+        var textValue = ''
+        this.msgList[index].arrayShow.forEach(function(item) {
+          if (item.selected) {
+            textValue += item.key + '@*@'
+          }
+        })
+        textValue = textValue.substr(0, textValue.length - 3)
+        var status = '3'
+        var parsem = {'roleFlag': '0', 'data': textValue, 'time': time, 'status': '999'}
+        parsem.isToday = true
+        if (parsem.time.timeToMinit === this.time.timeToMinit) {
+          parsem.time = ''
+        }
+        this.msgList.push(parsem)
+        this.toView = this.msgList.length - 1
+        this.sendSocketMessage(status, textValue, uuId, type, disputeType)
+        this.msgList[index].isSelected = true
+        this.time.stamp = time.stamp
+        this.time.timeToMinit = time.timeToMinit
+        this.$apply()
+
+      } else {
+        return false
+      }
+    },
+
+    // 点击纠纷类型
+    getStart(data) {
+      var that = this
+      this.currenType = data
+      this.uuId = ''
+      this.isMock = false
+      this.loading = true
+      wx.request({
+        url: ROBOT_URL + 'start',
+        data: '',
+        header: {'Content-Type': 'application/json', 'dsType': data, platform: Platform, device: 'WeChatApplet'},
+        success: function(res) {
+          if (res.data.status === '1') {
+            var time = that.getTime()
+            var arrayShow = res.data.lawPocedure.question.slice(0, 5)
+            var parsem = {'roleFlag': '1', 'status': '00', 'data': res.data.lawPocedure, 'time': time, 'showArrayNum': 5, 'arrayShow': arrayShow}
+            parsem.isToday = true
+            if (parsem.time.timeToMinit === that.time.timeToMinit) {
+              parsem.time = ''
+            }
+            that.msgList.push(parsem)
+            that.toView = that.msgList.length - 1
+            that.disputeType = res.data.disputeType
+            that.loading = false
+            that.$apply()
+          } else {
+            showAlert(res.data.info)
+          }
+        }
+      })
+    },
+
+    // 用户输入
+    handleInput(e) {
+      this.msg = e.detail.value
+    },
+
+    // 点击发送
+    handleSend() {
+      var inputMsg = trim(this.msg)
+      if (inputMsg === '') {
+        this.msg = ''
+      } else {
+        var msg = this.msg
+        this.consultContent = msg
+        this.msg = ''
+        this.sendMessage(msg)
+      }
+      this.$apply()
+    },
+    // 点击关闭弹框
+    closeBtnTitle() {
+      this.isShowBol = false
+      this.$apply()
+    },
+    // // 解纷方式
+    // disputeResolution() {
+    //   wx.navigateTo({url: `/pages/intelligentConsult/disputeResolution?dsType=${this.currenType}&disputeResolutionStage=${this.disputeSolution}`})
+    // },
+    //
+    // // 辅助工具
+    // assistiveTools() {
+    //   wx.navigateTo({url: `/pages/intelligentConsult/assistiveTools?dsType=${this.currenType}&disputeResolutionStage=${this.disputeSolution}`})
+    // },
+
+    // 法律知识
+    relatedLaws(data) {
+      wx.navigateTo({url: `/pages/intelligentConsult/legalKnowledge?dsType=${data.result.currenType}&questionType=${data.result.questionType}&id=${data.result.relatedLaws.id}&size=${data.result.relatedLaws.size}&status=${data.result.status}&disputeDescription=${data.result.disputeDescription}`})
+    },
+
+    // 相关案例
+    relatedCases(data) {
+      wx.navigateTo({url: `/pages/intelligentConsult/relateCase?dsType=${data.result.currenType}&disputeDescription=${data.result.disputeDescription}&potentialSuqiu=${data.result.potentialSuqiu}`})
+    },
+
+    // 文书样式
+    getInstrument(data) {
+      wx.navigateTo({url: `/pages/intelligentConsult/instrumentTemplate?dsType=${data.currenType}&qid=${data.instrument.qid}`})
+    },
+
+    // 人工咨询
+    consult(data) {
+      // 若没有登录，跳转到登录页面
+      if (hasToken()) {
+        wx.navigateTo({url: `/pages/home/consult?dsType=${data.result.currenType}&uuId=${data.result.uuId}&consultContent=${this.consultContent}`})
+      } else {
+        wx.navigateTo({url: `/pages/sign/signin?back=1`})
+      }
+    },
+
+    // 获取更多
+    getMore(qid, isSimpleAnswer, dsType, index) {
+      var that = this
+      if (that.msgList[index].showMore) {
+        that.msgList[index].showMore = false
+        that.$apply()
+      } else {
+        if (that.msgList[index].more) {
+          that.msgList[index].showMore = true
+          that.$apply()
+        } else {
+          wx.request({
+            method: 'post',
+            url: ROBOT_URL + 'answer',
+            data: {qid: qid, way: isSimpleAnswer},
+            header: {'content-type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'dsType': dsType, platform: Platform, device: 'WeChatApplet'},
+            success: function(res) {
+              if (res.data.status === 1) {
+                that.msgList[index].more = that.convertHtmlToText(res.data.detail)
+                that.msgList[index].showMore = true
+                that.$apply()
+              } else {
+                showAlert(res.data.detail)
+              }
+            }
+          })
+        }
+      }
+    },
+
+    // 长按气泡
+    longtap(index) {
+
+      let item = this.msgList[index]
+      let that = this, itemList = []
+      if (item.status === '1' || item.status === '999') {
+        itemList = this.actionSheet2
+      } else {
+        itemList = this.actionSheet1
+      }
+      wx.showActionSheet({
+        itemList: itemList,
+        success: function(res) {
+          if (res.tapIndex === 0) {
+            that.msgList.splice(index, 1)
+            that.msgList = that.msgList
+          } else if (res.tapIndex === 1) {
+            wx.showModal({
+              title: '提示',
+              content: '确定删除所有消息吗？',
+              showCancel: true,
+              success: function(res) {
+                if (res.confirm) {
+                  that.loading = true
+                  that.msgList = []
+                  that.saveStorage('msgList', that.msgList)
+                  that.loading = false
+                  that.$apply()
+                }
+              },
+              complete: function() {
+                that.loading = false
+              }
+            })
+          } else if (res.tapIndex === 2) {
+            if (item.status === '1' && !item.showMore) {
+              wx.setClipboardData({
+                data: item.data.searchResults.result[0].answer,
+              })
+            } else if (item.status === '1' && item.showMore) {
+              wx.setClipboardData({
+                data: item.more,
+              })
+            } else if (item.status === '999') {
+              wx.setClipboardData({
+                data: item.data,
+              })
+            }
+          }
+          that.$apply()
+        },
+        fail: function(res) {
+        }
+      })
+    },
+
+    // 粘贴
+    getClipboardData() {
+      var that = this
+      wx.getClipboardData({
+        success: function(res) {
+          that.msg = res.data
+          that.$apply()
+        }
+      })
+    }
+  };
+
+  // 连接socket
+  openSocket() {
+    var that = this
+    const url = ROBOT_SOCKET_URL
+    return new Promise((resolve, reject) => {
+      wx.connectSocket({
+        url,
+        success: (res) => {
+        }
+      })
+
+      // 连接成功
+      wx.onSocketOpen(function(res) {
+        console.log('socket connected')
+        that.loading = false
+        that.connected = true
+        that.socketRequest = 0
+        resolve()
+      })
+      // 连接出错
+      wx.onSocketError(function(res) {
+        that.loading = false
+        console.log('onSocketError')
+        console.log(res)
+        // 连5次
+        if (that.socketRequest++ < 5) {
+          setTimeout(() => that.openSocket().then(resolve), 1000)
+        } else {
+          // 超过5次失败
+          showAlert('网络多次连接失败，请退出重试')
+          .then(() => wx.navigateBack())
+        }
+      })
+
+      wx.onSocketClose(function(res) {
+        console.log('WebSocket 已关闭！')
+        that.connected = false
+      })
+    })
+  };
+
+  // 获取当前时间
+  getTime() {
+    var timeStamp = new Date()
+    var stamp = new Date().getTime()
+    let fullDate = dateformat(timeStamp, 'yyyy.MM.dd hh:mm')
+    let hour = fullDate.split(' ')[1].split(':')[0]
+    let detailData = fullDate.split(' ')[1]
+    let timeToMinit = dateformat(timeStamp, 'yyyyMMddhhmm')
+    if (hour >= 12) {
+      detailData = `下午 ${detailData}`
+    } else {
+      detailData = `上午 ${detailData}`
+    }
+    return {
+      fullDate,
+      detailData,
+      stamp,
+      timeToMinit
+    }
+  };
+
+  // 富文本转换为纯文本
+  convertHtmlToText(inputText) {
+    var returnText = '' + inputText
+    // -- remove BR tags and replace them with line break
+    returnText = returnText.replace(/<br\s*?>/gi, '\r\n')
+    return returnText
+  }
+
+  // 发送socket消息
+  sendSocketMessage(status, textValue, uuId, type, disputeType) {
+
+    var userId = '', that = this
+  // wx.showLoading()
+    return new Promise((resolve, reject) => {
+      let req = {status, textValue, uuId, type, showRecommend: false, showrelated: true, disputeType, userId, platform: 'zjODR', device: 'WeChatApplet'}
+      // socket断开重连
+      if (this.connected) {
+        wx.sendSocketMessage({
+          data: JSON.stringify(req),
+          success: function(res) {
+            that.isMock = false
+            resolve()
+          },
+          fail: function(res) {
+            that.isMock = false
+          }
+        })
+      } else {
+        this.openSocket().then(function() {
+          wx.sendSocketMessage({
+            data: JSON.stringify(req),
+            success: function(res) {
+              resolve()
+            },
+            fail: function(res) {
+              console.log(res)
+            }
+          })
+        })
+      }
+    })
+  };
+  // 发送文字消息
+  sendMessage(msg) {
+    this.loading = true
+    var time = this.getTime()
+    var parsem = {'roleFlag': '0', 'data': msg, 'time': time, 'status': '999'}
+    parsem.isToday = true
+    if (parsem.time.timeToMinit === this.time.timeToMinit) {
+      parsem.time = ''
+    }
+    this.msgList.push(parsem)
+    this.toView = this.msgList.length - 1
+    if (this.isMock) {
+      this.sendSocketMessage('3', msg, this.uuId, 'text', this.currenType)
+    } else {
+      this.sendSocketMessage('0', msg, this.uuId, '', this.currenType)
+    }
+    this.time.stamp = time.stamp
+    this.time.timeToMinit = time.timeToMinit
+    this.$apply()
+  };
+
+  // 本地缓存
+  saveStorage(item, val) {
+    wx.setStorage({
+      key: item,
+      data: val,
+    })
+  };
+  // 获取微信信息
+  getWxUserInfo () {
+    return new Promise((resolve, reject) => {
+      let data = wx.getStorageSync('wxUserInfo')
+      console.log(data)
+      if (data) {
+        return resolve(data)
+      }
+
+      wx.getUserInfo({
+        success: (res = {}) => {
+          const {userInfo} = res
+          data = {...userInfo}
+          wx.setStorage({
+            key: 'wxUserInfo',
+            data: data
+          })
+          resolve(data)
+        },
+        fail: reject
+      })
+    })
+  };
+
+  onLoad() {
+    this.loading = true
+    var nowTime = this.getTime()
+    this.time.stamp = nowTime.stamp
+    this.time.timeToMinit = nowTime.timeToMinit
+    var that = this
+    var time = that.getTime()
+    var storageInfo = wx.getStorageSync('msgList')
+    if (storageInfo.length) {
+      // 判断缓存消息是否是今天的
+      storageInfo.map((item) => {
+        if (item.time) {
+          if (new Date(item.time.stamp).toDateString() === new Date().toDateString()) {
+            // 当天
+            item.isToday = true
+          } else if (new Date(item.time.stamp) < new Date()) {
+            // 之前
+            item.isToday = false
+          }
+        }
+        return {
+          ...item
+        }
+      })
+      this.msgList = storageInfo
+      that.toView = that.msgList.length - 1
+    }
+    // 获取微信用户信息
+    if (!this.wxUserInfo) {
+      this.getWxUserInfo().then((info = {}) => {
+        this.wxUserInfo = {...info}
+        this.$apply()
+      })
+    }
+
+    var start = {'roleFlag': '1', 'status': '0', 'data': '您好，请问您想咨询什么问题', 'time': time, isToday: true}
+    that.msgList.push(start)
+      // 聊天对话初始化
+    wx.request({
+      url: ROBOT_URL + 'start',
+      data: '',
+      header: {'Content-Type': 'application/json', 'dsType': that.dsType, platform: Platform, device: 'WeChatApplet'},
+      success: function(res) {
+        if (res.data.status === '1') {
+          var arrayShow = res.data.lawPocedure.question.slice(0, 5)
+          var parsem = {'roleFlag': '1', 'status': '00', 'data': res.data.lawPocedure, 'showArrayNum': 5, 'arrayShow': arrayShow, 'isSelected': false}
+          that.msgList.push(parsem)
+          that.toView = that.msgList.length - 1
+          that.disputeType = res.data.disputeType
+          that.loading = false
+          that.$apply()
+        } else {
+          showAlert(res.data.info)
+        }
+      }
+    })
+  };
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '石景山在线矛盾纠纷多元化解平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  onShow() {
+    var that = this
+
+    if (!this.connected) {
+      this.openSocket()
+    }
+    wx.onSocketMessage(function (ret) {
+      var data = JSON.parse(ret.data)
+      console.log(data)
+      that.currenType = data.result.currenType
+      that.uuId = data.result.uuId
+      var time = that.getTime()
+      var parsem = {}
+      switch (data.result.status) {
+      case '1': {
+        if (data.result.instrument) {
+          parsem = {'roleFlag': '1', 'status': '1', 'instrument': true, 'data': data.result, 'time': time, 'more': '', 'showMore': false}
+        } else {
+          data.result.searchResults.result[0].answer = that.convertHtmlToText(data.result.searchResults.result[0].answer)
+          parsem = {'roleFlag': '1', 'status': '1', 'instrument': false, 'data': data.result, 'time': time, 'more': '', 'showMore': false}
+        }
+        // that.msgList.push(parsem)
+        // that.toView=that.msgList.length-1
+        break
+      }
+      case '2': {
+        var arrayShow = []
+        if (data.result.searchResults.result.length >= 10) {
+          arrayShow = data.result.searchResults.result.slice(5, 10)
+        } else {
+          arrayShow = data.result.searchResults.result.slice(0, 5)
+        }
+        parsem = {'roleFlag': '1', 'status': '2', 'data': data.result, 'time': time, 'showArrayNum': 5, 'arrayShow': arrayShow}
+        break
+      }
+      case '3': {
+        if (data.result.askQuestion[0].type === 'radio') {
+          that.msgList[that.lastRadioIndex].isSelected = true
+          that.lastRadioIndex = that.toView + 1
+        } else if (data.result.askQuestion[0].type === 'checkbox') {
+          that.msgList[that.lastCheckboxIndex].isSelected = true
+          var arr = data.result.askQuestion[0].cAnswer; arrayShow = []
+          for (let i = 0; i < arr.length; i++) {
+            arrayShow[i] = {'key': arr[i], 'selected': false}
+          }
+          that.lastCheckboxIndex = that.toView + 1
+        }
+        parsem = {'roleFlag': '1', 'status': '3', 'data': data.result, 'time': time, 'isSelected': false, 'arrayShow': arrayShow}
+        // that.msgList.push(parsem)
+        // that.toView=that.msgList.length-1
+        break
+      }
+      case '5': {
+        parsem = {'roleFlag': '1', 'status': '5', 'data': data.result, 'time': time}
+        // that.msgList.push(parsem)
+        // that.toView=that.msgList.length-1
+        break
+      }
+      case '6': {
+        parsem = {'roleFlag': '1', 'status': '6', 'data': data.result, 'time': time}
+        // that.msgList.push(parsem)
+        // that.toView=that.msgList.length-1
+        break
+      }
+      case '8': {
+        parsem = {'roleFlag': '1', 'status': '8', 'data': data.result, 'time': time}
+        // that.msgList.push(parsem)
+        // that.toView=that.msgList.length-1
+        break
+      }
+      case '9': {
+        arr = data.result.searchResults.result[0].answer.split(',')
+        var disputeTypeArr = []
+        arr.forEach(function (item) {
+          that.disputeType.result.forEach(function (items) {
+            if (item === items.context) {
+              disputeTypeArr.push({'ch': items.title, 'en': item})
+            }
+          })
+        })
+        arrayShow = disputeTypeArr.slice(0, 5)
+        parsem = {'roleFlag': '1', 'status': '9', 'title': data.result.searchResults.result[0].question, 'time': time, 'showArrayNum': 5, 'disputeTypeArr': disputeTypeArr, 'arrayShow': arrayShow}
+        break
+      }
+      }
+      if (parsem.time.timeToMinit === that.time.timeToMinit) {
+        parsem.time = ''
+      }
+      // 记录当前用户提交信息次数
+      count++
+      parsem.isToday = true
+      that.msgList.push(parsem)
+      that.toView = that.msgList.length - 1
+      // 法律知识
+      if (data.result.relatedLaws.size) {
+        parsem = {'roleFlag': '1', 'status': '52', 'data': data}
+        that.relatedLaws = data
+        count++
+        that.msgList.push(parsem)
+        that.toView = that.msgList.length - 1
+      }
+      // 相关案例
+      if (data.result.relatedCases.size) {
+        parsem = {'roleFlag': '1', 'status': '53', 'data': data}
+        that.relatedCases = data
+        count++
+        that.msgList.push(parsem)
+        that.toView = that.msgList.length - 1
+      }
+
+      // 解纷方式
+      if (data.result.disputeSolution.size) {
+        that.disputeSolution = data.result.disputeResolutionStage
+      }
+
+      // 人工咨询
+      if (data.result.status === '5' || data.result.status === '6' || data.result.status === '8') {
+        var parsem2 = {'roleFlag': '1', 'status': '51', 'data': data}
+        count++
+        that.msgList.push(parsem2)
+        that.toView = that.msgList.length - 1
+      }
+
+      // 多次回复显示免责协议
+      if (count >= 3) {
+        // 调用定时器做顶部动画处理
+        that.isShowTitle = true
+      }
+
+      if (data.result.status === '3') {
+        that.isMock = true
+      } else {
+        that.isMock = false
+      }
+      that.saveStorage('msgList', that.msgList)
+
+      that.loading = false
+      that.time.stamp = time.stamp
+      that.time.timeToMinit = time.timeToMinit
+      that.$apply()
+    })
+  };
+
+  onHide() {
+    wx.closeSocket()
+    this.connected = false
+    // this.$apply()
+  };
+
+  onUnload() {
+    wx.closeSocket()
+    this.connected = false
+    count = null
+    // this.$apply()
+  }
+}
+</script>
+<style lang="scss" type="text/scss">
+
+page{
+	height: 100%;
+  font-size: 30rpx;
+}
+.scrollBg{
+    width: 750rpx;
+    position: absolute;
+    height: 120rpx;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    background-color: rgb(255, 244, 232);
+    .scrollBox{
+      width: 650rpx;
+      position: absolute;
+      top: 0;
+      left: 50rpx;
+      padding: 10rpx 0;
+      color: #b37a51;
+      font-size:22rpx;
+      line-height: 32rpx;
+    }
+    .scrollTitle{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50rpx;
+      height: 100%;
+      text-align: center;
+      image{
+        margin-top: 20rpx;
+        width: 20rpx;
+        height: 20rpx;
+      }
+    }
+    .scrollClose{
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 50rpx;
+      height: 100%;
+      text-align: center;
+      background-color: rgb(255, 244, 232);
+      image{
+        margin-top: 20rpx;
+        width: 24rpx;
+        height: 24rpx
+      }
+    }
+}
+.timeBox{
+  text-align: center;
+  margin-top: 10rpx;
+}
+.msgTime{
+  display: inline-block;
+  padding: 10rpx 16rpx;
+  margin: 10rpx auto;
+  text-align: center;
+  background-color: #535353;
+  border-radius: 8rpx;
+  opacity: 0.25;
+  color: #fff;
+  font-size: 22rpx;
+}
+.scrollMsg{
+	height: calc(100vh - 110rpx);
+	background-color: rgb(246,246,246);
+
+	.item{
+		padding: 0 30rpx;
+		margin: 20rpx 0;
+		position: relative;
+
+		.headPic{
+			width: 80rpx;
+			height: 80rpx;
+			border-radius: 8rpx;
+			position: absolute;
+			top: 4rpx;
+		}
+
+		.time{
+
+			.timerIcon{
+				width: 16rpx;
+				height: 16rpx;
+				margin-right: 6rpx;
+			}
+
+			.msgTime{
+				color: #98989a;
+				font-size: 20rpx;
+			}
+		}
+	}
+
+	.left{
+		.headPic{
+			left: 30rpx;
+		}
+
+		.content{
+			margin-left: 100rpx;
+			background-color: #fff;
+			color: #666;
+      border-radius: 6rpx;
+			border-top-left-radius: 0;
+			max-width: 430rpx;
+			box-shadow: 0 3rpx 10rpx 2rpx	rgba(228, 232, 235, 0.65);
+			padding: 18rpx 30rpx;
+      /*padding-bottom: 0;*/
+			white-space: pre-wrap;
+  		word-break: break-all;
+  		display: inline-block;
+  		margin-top: 8rpx;
+
+			.triangle-left{
+				width:0;
+				height: 0;
+				border-top: 16rpx solid #fff;
+				border-left: 16rpx solid transparent;
+				position: absolute;
+				left: 122rpx;
+				top: 8rpx;
+			}
+		}
+
+		.time{
+			margin-left: 100rpx
+		}
+	}
+
+	.right{
+		overflow: hidden;
+		min-height: 80rpx;
+
+		.headPic{
+			right: 30rpx;
+		}
+		.msgContent{
+			display: flex;
+			flex-direction:column;
+			float: right;
+
+			.content{
+				margin-right: 100rpx;
+
+				.triangle-right{
+					width:0;
+					height: 0;
+					border-bottom: 16rpx solid transparent;
+					border-left: 16rpx solid #4798e5;
+					position: absolute;
+					right: 122rpx;
+					top: 8rpx;
+				}
+				.userSend{
+					max-width: 430rpx;
+					box-shadow: 0 3rpx 10rpx 2rpx	rgba(228, 232, 235, 0.65);
+					border-radius: 6rpx;
+					padding: 18rpx 30rpx;
+					white-space: pre-wrap;
+		  		word-break: break-all;
+		  		margin-top: 8rpx;
+					background-color: #4798e5;
+					border-top-right-radius: 0;
+					color: #fff;
+					float: right;
+				}
+			}
+
+			.time{
+				margin-right: 100rpx;
+				/*float: right;*/
+			}
+		}
+	}
+}
+
+.context{
+	font-size: 28rpx;
+
+	.relatedLaws{
+		display: flex;
+		align-items: center;
+
+		image{
+			/*float: left;*/
+			width: 94rpx;
+			height: 94rpx;
+			/*margin: auto 0; */
+			/*vertical-align: middle;*/
+		}
+
+		.lawRight{
+			margin-left: 36rpx;
+			max-width: 260rpx;
+			view{
+				display: inline-block;
+        width: 260rpx;
+			}
+
+			.title{
+				font-size: 28rpx;
+				color: #666;
+				font-weight: bold;
+				margin-bottom: 18rpx;
+			}
+		}
+	}
+
+	.oneChoose{
+		display: flex;
+		flex-direction:column;
+	}
+
+	.commonProblem{
+		display: flex;
+		flex-direction:column;
+
+		.changeList{
+			float: right;
+			color: #4ba0f2;
+		}
+
+		.commonProblemItem{
+			margin-left: 18rpx;
+			display: inline-block;
+		}
+
+		.listItems{
+			color: #4ba0f2
+		}
+	}
+
+	.mutiChoose{
+		image{
+			width: 22rpx;
+			height: 22rpx;
+			margin-right: 10rpx;
+			margin-top: 6rpx;
+		}
+
+		.boxItem{
+			view{
+				max-width: 400rpx;
+			}
+		}
+	}
+}
+.listItems{
+	margin-top: 24rpx;
+	font-size: 28rpx;
+}
+.selectedColor{
+	color: #4ba0f2;
+}
+.navigator{
+	display: flex;
+	align-items: flex-start;
+
+	.spot{
+		display: inline-block;
+	}
+}
+.chat-box{
+	display:flex;
+	/*justify-content: space-around;*/
+	align-items: center;
+	/*border-top: 1rpx solid #ccc;*/
+	height: 110rpx;
+	box-sizing: border-box;
+  background-clip: #fff;
+
+	.voice{
+		display: block;
+		width: 50rpx;
+		height: 50rpx;
+		margin: 0 30rpx;
+	}
+
+	input{
+		width: 510rpx;
+		height: 72rpx;
+		border: 1rpx solid #ccc;
+		border-radius: 4rpx;
+		background-color: #fafafa;
+    margin: 14rpx 0;
+		margin-left: 30rpx;
+    padding: 0 20rpx;
+	}
+
+	button{
+		width: 150rpx;
+		height: 72rpx;
+		line-height: 72rpx;
+		font-size: 28rpx;
+		margin: 0 30rpx 0 30rpx;
+		padding: 0;
+		background-color: #4798e5;
+		/*border-radius: 4rpx;*/
+		color: #fff;
+		vertical-align: middle;
+    &::after{
+      border:1rpx solid #c8c8c8;;
+    }
+	}
+}
+.mutiConfirm{
+	width: 154rpx;
+	height: 54rpx;
+	line-height: 54rpx;
+	background-color: #4798e5;
+	border-radius: 10rpx;
+	color: #fff;
+	font-size: 28rpx;
+	margin-top: 24rpx;
+}
+.fixedPic{
+	position: absolute;
+	bottom: 320rpx;
+	right: 20rpx;
+	width: 100rpx;
+	height: 100rpx;
+	z-index: 999;
+
+	image{
+		width: 100rpx;
+		height: 100rpx;
+	}
+}
+
+.fixedToolPic{
+  position: absolute;
+  bottom: 200rpx;
+  right: 20rpx;
+  width: 100rpx;
+  height: 100rpx;
+  z-index: 999;
+
+  image{
+    width: 100rpx;
+    height: 100rpx;
+  }
+}
+
+.more{
+  float: right;
+	color: #4ba0f2;
+  /*font-size: 36rpx;*/
+  height:40rpx;
+  padding: 30rpx 20rpx 0;
+  line-height: 40rpx;
+  text-align: right;
+  /*margin-top: 10rpx;*/
+}
+
+/*.delet{
+	position: absolute;
+	bottom: -40rpx;
+	left: 30%;
+	width: 250rpx;
+	text-align: center;
+	border:1rpx solid #eee;
+	background-color: #fff;
+	z-index: 500;
+	height: 120rpx;
+	box-sizing: border-box;
+
+	.deletItem{
+		width: 200rpx;
+		height: 60rpx;
+		line-height: 60rpx;
+		padding: 30rpx auto 5rpx;
+		margin: 0 auto;
+		box-sizing: border-box;
+		z-index: 500;
+	}
+
+	.deletOne{
+		border-bottom: 1rpx solid #eee;
+	}
+}
+
+.right .delet {
+	bottom:0;
+}*/
+</style>

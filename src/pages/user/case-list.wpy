@@ -1,0 +1,201 @@
+<template>
+  <view class="container">
+    <view class="section-caption">
+      <view class="section-title">案件编号:lA9999999999</view>
+    </view>
+    <view class="zan-panel no-mg">
+      <view class="zan-cell">
+        <view class="zan-field__title">纠纷类型:</view>
+        <view class="zan-cell__bd">房屋租赁</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">申请人:</view>
+        <view class="zan-cell__bd">李雪</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792816</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">被申请人:</view>
+        <view class="zan-cell__bd">韩梅梅</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792817</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">调解员:</view>
+        <view class="zan-cell__bd">刘大海</view>
+      </view>
+
+      <view class="zan-btns btn-group">
+        <navigator
+          class="zan-btn zan-btn--primary zan-btn--plain"
+          url="/pages/user/add-material">+ 添加证据材料</navigator>
+      </view>
+    </view>
+
+    <view class="section-caption">
+      <view class="section-title">案件编号:lA9999999999</view>
+    </view>
+    <view class="zan-panel no-mg">
+      <view class="zan-cell">
+        <view class="zan-field__title">纠纷类型:</view>
+        <view class="zan-cell__bd">房屋租赁</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">申请人:</view>
+        <view class="zan-cell__bd">李雪</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792816</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">被申请人:</view>
+        <view class="zan-cell__bd">韩梅梅</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792817</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">调解员:</view>
+        <view class="zan-cell__bd">刘大海</view>
+      </view>
+
+      <view class="zan-btns btn-group">
+        <navigator
+          class="zan-btn zan-btn--primary zan-btn--plain"
+          url="/pages/user/add-material">+ 添加证据材料</navigator>
+      </view>
+    </view>
+
+    <view class="section-caption">
+      <view class="section-title">案件编号:lA9999999999</view>
+    </view>
+    <view class="zan-panel no-mg">
+      <view class="zan-cell">
+        <view class="zan-field__title">纠纷类型:</view>
+        <view class="zan-cell__bd">房屋租赁</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">申请人:</view>
+        <view class="zan-cell__bd">李雪</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792816</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">被申请人:</view>
+        <view class="zan-cell__bd">韩梅梅</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792817</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">调解员:</view>
+        <view class="zan-cell__bd">刘大海</view>
+      </view>
+
+      <view class="zan-btns btn-group">
+        <navigator
+          class="zan-btn zan-btn--primary zan-btn--plain"
+          url="/pages/user/add-material">+ 添加证据材料</navigator>
+      </view>
+    </view>
+
+
+    <view class="section-caption">
+      <view class="section-title">案件编号:lA9999999999</view>
+    </view>
+    <view class="zan-panel no-mg">
+      <view class="zan-cell">
+        <view class="zan-field__title">纠纷类型:</view>
+        <view class="zan-cell__bd">房屋租赁</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">申请人:</view>
+        <view class="zan-cell__bd">李雪</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792816</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">被申请人:</view>
+        <view class="zan-cell__bd">韩梅梅</view>
+        <view class="zan-field__title">手机号:</view>
+        <view class="zan-cell__bd">15210792817</view>
+      </view>
+
+      <view class="zan-cell">
+        <view class="zan-field__title">调解员:</view>
+        <view class="zan-cell__bd">刘大海</view>
+      </view>
+
+      <view class="zan-btns btn-group">
+        <navigator
+          class="zan-btn zan-btn--primary zan-btn--plain"
+          url="/pages/user/add-material">+ 添加证据材料</navigator>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+// import {removeItem, getItem} from '@/utils/storage'
+export default class User extends wepy.page {
+  config={
+    navigationBarTitleText: '证据材料'
+  }
+
+  data={
+    showName: '',
+    imgUrl: '/images/sign/avatar_default.png'
+  }
+  methods={
+
+  }
+
+  onShow() {
+
+  }
+}
+
+</script>
+
+<style lang="scss" type="text/scss">
+  @import "../../styles/variables";
+  .section-caption {
+    background-color: $gray-light;
+  }
+
+  .zan-panel + .section-caption {
+    margin-top: 10px;
+  }
+
+  .section-title {
+    font-weight: normal;
+  }
+
+  .break{
+    word-wrap:break-word;
+    width:100%;
+  }
+
+  .zan-field__title,
+  .zan-panel > .zan-panel__title {
+    color: $gray-dark;
+  }
+  .zan-btns .zan-btn {
+    display: block;
+    margin: 0 auto;
+    width: 140px;
+    font-size: 14px;
+    line-height: 40px;
+    height: 40px;
+    border: 1px dashed $primary-color;
+  }
+</style>

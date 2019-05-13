@@ -1,0 +1,395 @@
+<template>
+  <zan-popup :show.sync="show" direction="bottom">
+    <view class="address-picker">
+      <view class="address-picker__hd">
+        <view class="address-picker__title zan-ellipsis">{{ title }}</view>
+        <view class="zan-btn zan-btn--small zan-btn--text" hover-class="button-hover" @tap="handleDimiss">关闭</view>
+      </view>
+      <view class="address-picker__bd">
+        <view class="address-picker-select zan-hairline--bottom">
+          <view
+            wx:for="{{ checkedItems }}"
+            wx:key="index"
+            class="address-picker__btn"
+            hover-class="button-hover"
+            @tap.stop="handleJump({{ index }})"
+          >
+            <text wx:if="{{ item.checked }}">{{ item.name }}</text>
+            <text wx:else class="gray-dark">请选择</text>
+          </view>
+        </view>
+        <scroll-view scroll-y style="height:260px;">
+          <view wx:if="{{ loading }}">
+            <view><text>\n</text></view>
+            <view><text>\n</text></view>
+            <view><text>\n</text></view>
+            <zan-loadmore :loading.sync="loading"></zan-loadmore>
+          </view>
+          <view wx:else class="zan-panel no-mg">
+            <view
+              wx:for="{{ list }}"
+              wx:key="index"
+              class="zan-cell zan-cell--access"
+              hover-class="button-hover"
+              @tap="handleChecked({{ index }})"
+            >
+              <view class="zan-cell__bd">{{ item.name }}</view>
+              <view class="zan-cell__ft"></view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+  </zan-popup>
+</template>
+
+<script>
+import wepy from 'wepy'
+import ZanPopup from './zan-popup'
+import ZanLoadmore from './zan-loadmore'
+import Store from '@/utils/store'
+// import {getAreaData} from '@/api/common'
+
+// 创建缓存对象
+const store = Store.getStore('__address_picker__')
+
+export default class AddressPicker extends wepy.component {
+  props = {
+    show: {
+      type: Boolean,
+      default: false,
+      twoWay: true
+    },
+    // 是否启用延迟加载, 默认启用
+    lazy: {
+      type: Boolean,
+      default: true
+    },
+    // 是否纠纷类型选择
+    isDispute: Boolean,
+    title: {
+      type: String,
+      default: '请选择'
+    }
+  }
+
+  components = {
+    'zan-popup': ZanPopup,
+    'zan-loadmore': ZanLoadmore
+  }
+
+  data = {
+    list: [],
+    level: 1,
+    // code: '',
+    checkedItems: [],
+    loading: false,
+    parentCode: 'root',
+    choseLevel: 3
+  }
+
+  methods = {
+    // 点击列表项 -> 选择一项
+    handleChecked(index) {
+      if (this.isDispute) {
+        this.choseLevel = 4
+      } else {
+        this.choseLevel = 3
+      }
+      const item = this.list[index]
+      // console.log(item)
+      const {code} = item
+
+      this.appendItem(item)
+
+      // 有子集
+      // if (isHaveSubset && this.level <= 3) {  原组件方法
+      if (this.level <= this.choseLevel) {
+        this.code = code
+        if (this.level !== 0) {
+          this.code = ''
+        }
+
+        this.parentCode = code
+        this.level++
+        this.appendPlaceholder()
+        this.loadData(item)
+      } else {
+        // 没有子集，本次选择结束
+        this.handleChange()
+
+        // 关闭选择器
+        this.dimission()
+      }
+    },
+    // 点击已选则的一项进行跳转
+    handleJump(index) {
+      // 避免重复加载
+      if (index === this.level - 1) return
+      const item = this.checkedItems[index]
+
+      if (item.checked) {
+        // 第一级的code为空
+        if (index === 0) {
+          this.parentCode = ''
+        } else {
+          // 非第一级的code为上一级的code
+          const prev = this.checkedItems[index - 1]
+
+          // this.code = prev.code  原组件方法
+          this.parentCode = prev.code
+        }
+
+        // level加1
+        this.level = index + 1
+        // 删除level后面的项
+        this.checkedItems = this.checkedItems.splice(0, this.level)
+
+        // 加载数据
+        this.loadData(item)
+      }
+    },
+    // 关闭
+    handleDimiss() {
+      this.dimission()
+    }
+  }
+
+  watch = {
+    show(val, oldVal) {
+      if (val) {
+        // 延迟加载实现
+        // 第一次显示的时候列表为空就加载数据
+        if (this.level === 1 && !this.list.length) {
+          this.loadData()
+        }
+      } else {
+        this.reset()
+      }
+    }
+  }
+
+  /**
+   * 重置
+   */
+  reset() {
+    this.list = []
+    this.code = ''
+    this.level = 1
+    this.checkedItems = []
+
+    // 添加第一级的placeholder
+    this.appendPlaceholder()
+
+    this.$apply()
+  }
+
+  /**
+   * 关闭选择器
+   */
+  dimission() {
+    this.show = false
+
+    this.$apply()
+  }
+
+  /**
+   * 触发 change 事件
+   */
+  handleChange() {
+    this.$emit('change', this.checkedItems.map(({name, code}) => ({name, code})))
+  }
+
+  /**
+   * 将选中项添加到集合中
+   * @param  {String} options.code
+   * @param  {String} options.name
+   */
+  appendItem({code, name}) {
+    if (this.checkedItems.length <= this.level) {
+      this.checkedItems[this.level - 1] = {
+        name,
+        code,
+        checked: true
+      }
+    }
+  }
+
+  /**
+   * 添加 placeholder
+   */
+  appendPlaceholder() {
+    if (this.checkedItems.length < this.level) {
+      this.checkedItems.push({checked: false})
+    }
+  }
+
+  /**
+   * 加载数据
+   */
+  loadData(item) {
+    // 清空当前列表
+    this.list = []
+    // 开启加载状态
+    this.loading = true
+
+    this.$apply()
+
+    const {code, level, parentCode} = this
+
+    // 获取数据
+    this.fetch(code, level, parentCode, item)
+    .then((list = []) => {
+      // 关闭加载状态
+      this.loading = false
+      this.list = list
+
+      this.$apply()
+    })
+    .catch(e => {
+      this.loading = false
+
+      this.$apply()
+    })
+  }
+
+  /**
+   * 加载数据代理，对数据的缓存在此处处理
+   * @param  {String} code  要加载的父级的code，为空则为第一级
+   * @param  {Number} level 当前的level，从1开始
+   * @return {promise}
+   */
+  fetch(code = '', level = 1, parentCode, nullItem) {
+    // console.log(this.title)
+    return new Promise((resolve, reject) => {
+      // 用于缓存的key, 第一级没有code，用area作为key
+      // const key = level === 1 ? 'area' : code  原组件方法
+      const key = level === 1 ? 'root' : parentCode
+      // console.log(key)
+
+      // 首先从缓存读取
+      let list = store.get(key)
+      // 有缓存
+      // 判断是否需要清除缓存
+      if (list && list.length) {
+        // 不是纠纷类型，list只有一条，说明是之前缓存的北京，需要清除缓存，重新加载所有的省
+        if ((this.isDispute) || (!this.isDispute && list.length === 1)) {
+          store.remove(key)
+          list = null
+        }
+      }
+
+      // 有缓存，直接返回
+      if (list && list.length) {
+        return resolve([...list])
+      }
+
+      // 纠纷类型的第一级为北京市
+      if (level === 1 && this.isDispute) {
+        list = [{name: '北京市', isHaveSubset: true, code: '1100000000'}]
+
+        // 缓存数据
+        store.set(key, list)
+
+        return resolve(list)
+      } else if (level === 2 && this.isDispute) {
+        list = [{name: '市辖区', isHaveSubset: true, code: '110100000000'}]
+        // 缓存数据
+        // store.set(key, list)
+
+        return resolve(list)
+
+      } else if (level === 3 && this.isDispute) {
+        list = [{name: '石景山区', isHaveSubset: true, code: '110107000000'}]
+        // 缓存数据
+        // store.set(key, list)
+
+        return resolve(list)
+      }
+
+      // let vm = this
+      // 从接口获取
+      // return getAreaData({code, level, parentCode})
+      //   .then(list => {
+      //
+      //     if (level === 5 && this.isDispute) {
+      //       list = list.concat({code: '', fullName: '', level: 5, name: '暂不知道', parentCode: '110107000000'})
+      //     }
+      //
+      //     if (list.length === 0) {
+      //       let nullArr = []
+      //       nullItem.level ++
+      //       nullArr.push(nullItem)
+      //       store.set(key, nullArr)
+      //       resolve(nullArr)
+      //       return
+      //     }
+      //
+      //     // 缓存数据
+      //     store.set(key, list)
+      //
+      //     resolve(list)
+      //   })
+      //   .catch(reject)
+    })
+  }
+
+  onLoad() {
+    this.reset()
+    // 非延迟加载 -> 初始化加载
+    if (!this.lazy) {
+      this.loadData()
+    }
+  }
+}
+</script>
+
+<style lang="scss" type="text/scss">
+@import '../styles/variables.scss';
+
+.address-picker {
+  // pointer-events: none;
+}
+
+.address-picker__hd {
+  position: relative;
+  padding: 6px 80px;
+  overflow: hidden;
+
+  .address-picker__title {
+    height: 18px;
+    font-size: 12px;
+    text-align: center;
+    color: $gray-darker;
+  }
+
+  .zan-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 5;
+  }
+}
+.address-picker__bd {
+  position: relative;
+  overflow: hidden;
+}
+.address-picker-select {
+  padding: 3px 5px;
+}
+.address-picker__btn {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 12px 10px;
+  margin-bottom: 5px;
+  line-height: 1;
+  font-size: 14px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+
+  &::after {
+    display: none;
+  }
+}
+</style>

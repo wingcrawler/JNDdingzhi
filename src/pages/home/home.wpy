@@ -1,0 +1,683 @@
+<template>
+  <view class="container">
+    <view class="banner"><image src="/images/home/banner.png"></image></view>
+     <view class="section sectionone section_lxd">
+    <view class="user-bar">
+      <view class="zan-cell zan-cell--access" style="padding:5px 0 5px 10px;">
+        <view class="zan-cell__icon">
+          <view class="avatar">
+            <image wx:if="{{avatarUrl && authSetting}}" src="{{ avatarUrl }}" mode="aspectFill" style="width:100%;height:100%;" @error="onError"></image>
+            <button wx:else  plain class="infobtn" open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="onGotUserInfo"><image src="{{ avatarUrl }}" mode="aspectFill" style="width:100%;height:100%;" @error="onError"></image></button>
+          </view>
+        </view>
+        <view class="zan-cell__bd inner">
+          <view class="nick-name">
+            <view class="zan-ellipsis" wx:if="{{nickName}}">欢迎您，{{ nickName }}</view>
+            <view  class="zan-ellipsis" wx:else>您好，微信用户</view>
+          </view>
+        </view>
+        <view class="zan-cell__bd usericon" @tap="navigateToUser()">
+          <image src="/images/home/user.png"></image>
+          <view class="user_text">
+            {{zttext}} | <text class="icon iconzuojiantou"></text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+    <view class="box">
+      <view class="box1">
+        <view class="po-pr" @tap="navigateTo('1')">
+          <view class="text-box">
+            <h3>诉讼风险智能评估</h3>
+            <text class="wz">全面中立的深度咨询报告</text>
+            <view class="button">申请评估<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img1" src="/images/home/1.png"></image>
+        </view>
+        <view class="po-pr" @tap="navigateTo('3')">
+          <view class="text-box">
+            <h3>微信立案</h3>
+            <text class="wz">微信在线立案,省时省力</text>
+            <view class="button">微信立案<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img3" src="/images/home/3.png"></image>
+        </view>
+      </view>
+      <view class="box2">
+        <!--<view class="po-pr" wx:if="{{userType === 1}}" @tap="navigateTo('2')">-->
+          <!--<view class="text-box">-->
+            <!--<h3>案件智能咨询</h3>-->
+            <!--<text class="wz">提供智能化的自动咨询</text>-->
+            <!--<view class="button">智能咨询<text class="icon icon-zuojiantou"></text></view>-->
+          <!--</view>-->
+          <!--<image class="img2" src="/images/home/2.png"></image>-->
+        <!--</view>-->
+        <!--<view class="po-pr" wx:if="{{userType === 1}}" @tap="navigateTo('4')">-->
+          <!--<view class="text-box">-->
+            <!--<h3>立案窗口快速立案</h3>-->
+            <!--<text class="wz">现场扫描二维码,快速立案</text>-->
+            <!--<view class="button">快速立案<text class="icon icon-zuojiantou"></text></view>-->
+          <!--</view>-->
+          <!--<image class="img4" src="/images/home/4.png"></image>-->
+        <!--</view>-->
+        <view class="po-pr" @tap="navigateTo('2')">
+          <view class="text-box">
+            <h3>案件智能咨询</h3>
+            <text class="wz">提供智能化的自动咨询</text>
+            <view class="button">智能咨询<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img6" src="/images/home/6.png"></image>
+        </view>
+        <view class="po-pr" @tap="navigateTo('6')">
+          <view class="text-box">
+            <h3>多元调解系统</h3>
+            <text class="wz">提供深度调解服务</text>
+            <view class="button">多元调解<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img6" src="/images/home/7.png"></image>
+        </view>
+
+        <view class="po-pr"  @tap="navigateTo('4')">
+          <view class="text-box">
+            <h3>立案窗口快速立案</h3>
+            <text class="wz">现场扫描二维码,快速立案</text>
+            <view class="button">快速立案<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img8" src="/images/home/8.png"></image>
+        </view>
+      </view>
+    </view>
+    <view class="box no-bd-top">
+      <view class="box3" @tap="navigateTo('5')">
+        <view class="po-pr">
+          <view class="text-box">
+            <h3>管辖指引</h3>
+            <text class="wz">法院工作时间,管辖范围一目了然</text>
+            <view class="button">查看指引<text class="icon icon-zuojiantou"></text></view>
+          </view>
+          <image class="img5" src="/images/home/5.png"></image>
+          </view>
+        </view>
+      </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {FXH5URL, EWMLAH5, KSLAH5} from '@/utils/constants'
+// import {getHomeData, getLiveShow, getResourceCount} from '@/api/home'
+import {getUserInfo, removeUserInfo} from '@/utils/utils'
+import {setItem, removeItemSync} from '@/utils/storage'
+// let CryptoJS = require('../../utils/aes.js')
+let Base64 = require('../../utils/base.js')
+import MD5 from '@/utils/md5'
+export default class Home extends wepy.page {
+  config = {
+    navigationBarTitleText: '北京法院多元调解与速裁平台',
+    navigationBarTextStyle: 'black',
+    navigationBarBackgroundColor: '#fff'
+  }
+
+  data = {
+    showBar: false,
+    hasToken: false,
+    userType: 1,
+    userInfo: null,
+    wxUserInfo: null,
+    zttext: '登录',
+    resources: {},
+    liveData: null,
+    timestamp: 0,
+    imgerror: false,
+    modalisShow: false,
+    minutesnum: 5,
+    minutesword: '分钟后开始',
+    caseid: null,
+    endtime: null,
+    meettingId: null,
+    meetingStatus: null,
+    meetingUrl: null,
+    roomId: null,
+    orderTime: null,
+    userId: null,
+    hourstime: null,
+    few: null,
+    authSetting: false,
+    stop: false,
+    isFaceAuth: false
+  }
+
+  computed = {
+    avatarUrl() {
+      // 更新用户信息
+      this.userInfo = getUserInfo()
+      // if (!this.userInfo) {
+      //   return '/images/sign/avatar_default.png'
+      // }
+      let data = this.userInfo
+      if (data && data.portraitUrl && !this.imgerror) {
+        return data.portraitUrl
+      }
+      // 默认头像
+      if (this.imgerror) {
+        return '/images/sign/avatar_default.png'
+      }
+      // 获取微信头像
+      if (this.wxUserInfo) {
+        this.authSetting = true
+        return this.wxUserInfo.avatarUrl
+      }
+      if (!this.wxUserInfo) {
+        return '/images/sign/avatar_default.png'
+      }
+    },
+    nickName() {
+      let data = getUserInfo()
+      if (data) {
+        if (data.zrrxm) {
+          this.zttext = '退出登录'
+          if (data.ls === '1') {
+            return `${data.zrrxm}律师`
+          }
+          return data.zrrxm
+        }
+
+        if (data.name) {
+          return data.name
+        }
+      }
+
+      if (this.wxUserInfo) {
+        return this.wxUserInfo.nickName
+      }
+      return false
+    },
+  }
+  onShareAppMessage(res) {
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log(res.target)
+    }
+    return {
+      title: '北京法院多元调解与速裁平台',
+      imageUrl: '/images/home/icon.jpg',
+      path: '/pages/home/home'
+    }
+  }
+  methods = {
+    // modalClose() {
+    //   this.modalisShow = false
+    // },
+    onGotUserInfo(e) {
+      if (e.detail.userInfo) {
+        this.avatarUrl = e.detail.userInfo.avatarUrl
+        this.wxUserInfo = e.detail.userInfo
+        setItem('wxUserInfo', this.wxUserInfo)
+        this.authSetting = true
+        this.$apply()
+      }
+      this.$apply()
+      // console.log(this.avatarUrl)
+    },
+    cancel() {
+      this.modalisShow = false
+    },
+    // send() {
+    //   wx.navigateTo({url: '/pages/user/real-name-authentication'})
+    //   this.modalisShow = false
+    // },
+    onError() {
+      this.imgerror = true
+      this.$apply()
+      // console.log(this.imgerror)
+    },
+    navigateToUser() {
+      let that = this
+      if (that.userInfo) {
+        wx.showModal({
+          content: '您确定要退出该账号吗？',
+          success: function({confirm}) {
+            if (confirm) {
+              removeItemSync('name')
+              removeItemSync('pwd')
+              removeItemSync('wxUserInfo')
+              removeItemSync('userInfo')
+              removeItemSync('uuid_value')
+              removeUserInfo()
+              wx.reLaunch({url: '/pages/home/home'})
+              console.log(that.userInfo)
+            }
+          }
+        })
+      } else {
+        wx.navigateTo({url: '/pages/sign/user-signin'})
+      }
+
+    },
+    // 跳转页面  type
+    navigateTo(type) {
+      // type=1 诉讼风险智能评估
+      // type=2 案件智能咨询
+      // type=3 微信预约立案
+      // type=4 二维码快立案
+      // type=5 管辖指引
+      // type=6 多元调解系统
+      let url = ''
+      if (type === '1') {
+        // if (this.isFaceAuth) {
+        url = encodeURIComponent(`${FXH5URL}ssfxpg-wx/ssfxpg/anon/startSsfxpg?fy=1&sjmlbh=211B8A0D1CB5FAACED38EE2D8BC70966`)
+        return wx.navigateTo({url: `/pages/webview/webview?url=${url}`})
+        // }
+        // return wx.navigateTo({url: `/pages/home/real-name-authentication`})
+      }
+      if (type === '3') {
+        console.log(this.userInfo)
+        if (this.userInfo) {
+          let params = this.userInfo.phone + 'A3LRoeQ3ulpA5eu3kW6ca0k6QMEgJ9L5'
+          let paramsForMd5 = MD5(params)
+          let lastParams = Base64.encode(paramsForMd5)
+          // // 测试环境
+          // url = encodeURIComponent(`https://wsf.ixueike.net/weisufuv2/lian/sysdata/source/1/mobile/${this.userInfo.phone}/token/${lastParams}`)
+          // 生产环境
+          url = encodeURIComponent(`https://gywxpt.bjcourt.gov.cn/weisufuv2/lian/sysdata/source/1/mobile/${this.userInfo.phone}/token/${lastParams}`)
+
+          return wx.navigateTo({url: `/pages/webview/webview?url=${url}&type=1`})
+        }
+        return wx.navigateTo({url: '/pages/sign/user-signin'})
+      }
+      if (type === '2') {
+        url = `/pages/intelligentConsult/intelligentConsult`
+        return wx.navigateTo({url: url})
+      }
+      if (type === '4') {
+        if (this.userInfo) {
+          let params = this.userInfo.phone + 'ilEuIykFBD6Rlyk5cWaj877t7uy5DmDZ'
+          let paramsForMd5 = MD5(params)
+          let lastParams = Base64.encode(paramsForMd5)
+          // 测试环境
+          url = encodeURIComponent(`https://ksla.bjcourt.gov.cn/index/sign/sysdata/source/1/mobile/${this.userInfo.phone}/token/${lastParams}`)
+          // 生产环境
+          // url = encodeURIComponent(`https://gywxpt.bjcourt.gov.cn/index/sign/sysdata/source/1/mobile/${this.userInfo.phone}/token/${lastParams}`)
+
+          return wx.navigateTo({url: `/pages/webview/webview?url=${url}&type=1`})
+        }
+        return wx.navigateTo({url: '/pages/sign/user-signin'})
+      }
+      if (type === '5') {
+        url = `/pages/court-guide/court-guide`
+        return wx.navigateTo({url: url})
+      }
+      if (type === '6') {
+        url = encodeURIComponent(`https://wx.bjinternetcourt.gov.cn/dytj/login.html`)
+        return wx.navigateTo({url: `/pages/webview/webview?url=${url}&type=1`})
+      }
+      // return wx.showToast({title: '正在建设中...', icon: 'none', duration: 2e3})
+      // 判断是否有登录
+      // if (!this.hasToken) {
+      //   this.updateToken()
+      // }
+      // // 若没有登录，跳转到登录页面
+      // if (this.hasToken) {
+      //   switch (type) {
+      //   case '1': // 实名认证校验
+      //     if (this.userInfo.isRealName === false || this.userInfo.isFacialVerify === false) {
+      //       return this.modalisShow = true
+      //     }
+      //     break
+      //   }
+      // } else {
+      //   url = '/pages/sign/signin'
+      // }
+      // wx.navigateTo({url})
+    },
+    // comtime() {
+    //   if (this.minutesnum === '') {
+    //     wx.navigateTo({url: `/pages/webrtcroom/room/room?roomid=${this.roomId}&caseid=${this.caseid}`})
+    //   } else {
+    //     return wx.showToast({title: '视频会议尚未开始，请稍后~', icon: 'none', duration: 3e3})
+    //   }
+    // }
+  }
+
+  watch = {
+    hasToken(newVal, oldVal) {
+      this.onTokenChange()
+    },
+  }
+  // managerstart() {
+  //   manager.start({duration: 3000, lang: 'zh_CN'})
+  // }
+  // fetchData() {
+  //   wx.showNavigationBarLoading()
+  //   getHomeData({}, () => false)
+  //   .then((data = {}) => {
+  //     const {
+  //       totalNumber = 0
+  //     } = data
+  //     this.count = totalNumber
+  //     getLiveShow()
+  //     .then((data = {}) => {
+  //       console.log(data)
+  //       if (!data) {
+  //         this.showBar = false
+  //         return false
+  //       }
+  //       // // 获取视频的参数
+  //       this.userId = data.id
+  //       this.caseid = data.caseId
+  //       this.endtime = data.endTime
+  //       if (data.caseMeetingUrlResDTO) {
+  //         this.meettingId = data.caseMeetingUrlResDTO.meetingId
+  //         this.meetingUrl = data.caseMeetingUrlResDTO.meetingUrl
+  //       }
+  //       this.meetingStatus = data.meetingStatus
+  //       this.orderTime = data.orderTime
+  //       this.roomId = data.roomId
+  //       // 即将开始的会议时间
+  //       let mettingtimg = new Date(this.orderTime)
+  //       // console.log(mettingtimg)
+  //
+  //       // 页面用到的时间 hh：mm
+  //       this.hourstime = dateformat(mettingtimg, 'hh:mm')
+  //       // console.log(this.hourstime)
+  //       // 当前时间
+  //       let now = Date.parse(new Date())
+  //       // console.log(this.meettingId)
+  //       // console.log(this.orderTime)
+  //       // console.log(now)
+  //       // 会议时间与当前时间的差值 与 5分钟（300000毫秒）做比较
+  //       this.few = this.orderTime - now
+  //       // console.log(this.few)
+  //       if (this.meettingId === null || this.orderTime === null) {
+  //         this.showBar = false
+  //       } else if (this.few <= 300000) {
+  //         this.showBar = true
+  //         this.countdown()
+  //         this.$apply()
+  //       }
+  //     })
+  //     this.$apply()
+  //     wx.hideNavigationBarLoading()
+  //     this.updateToken()
+  //   })
+  //   .catch(e => {
+  //     wx.hideNavigationBarLoading()
+  //     this.updateToken()
+  //   })
+  // }
+  // token改变
+  // onTokenChange() {
+  //   // 已登录
+  //   if (this.hasToken) {
+  //     // 更新用户信息
+  //     this.userInfo = getUserInfo()
+  //     // 更新会议状态
+  //     this.liveData = getLiveData()
+  //     this.$apply()
+  //
+  //   } else {
+  //     // 未登录，清空用户信息
+  //     this.userInfo = null
+  //     // 清空会议状态
+  //     this.liveData = null
+  //     this.$apply()
+  //   }
+  // }
+
+  onLoad() {
+    // this.timestamp = Date.now()
+    // getResourceCount()
+    // .then((data = {}) => {
+    //   // console.log(data)
+    //   this.resources = data
+    //   this.$apply()
+    // })
+    console.log(getUserInfo())
+    // 更新类型信息
+    // setTimeout(() => {
+    //   this.updateToken()
+    // }, 300)
+    let that = this
+    wx.getSetting({
+      success (res) {
+        console.log(res.authSetting)
+        if (!res.authSetting['scope.userInfo']) {
+          that.authSetting = false
+          that.$apply()
+        } else {
+          wx.getUserInfo({
+            success: function(res) {
+              that.wxUserInfo = res.userInfo
+              that.$apply()
+            }
+          })
+          that.authSetting = true
+          that.$apply()
+        }
+      }
+    })
+
+  }
+  // // 更新token
+  // updateToken() {
+  //   // 更新登录状态
+  //   this.hasToken = hasToken()
+  //   this.$apply()
+  // }
+
+  onShow() {
+    console.log(1111)
+    // let name = getItemSync('name')
+    // if (name === '13810613392') {
+    //   this.userType = 2
+    //   this.$apply()
+    // }
+    // if (getItemSync('isFaceAuth')) {
+    //   this.isFaceAuth = true
+    // }
+    // console.log(getItemSync('isFaceAuth'))
+    // this.updateToken()
+    // this.fetchData()
+  }
+
+  // countdown(t = Math.ceil((this.few + 60000) / 1000 / 60)) {
+  //   // console.log(t)
+  //   if (--t > 0) {
+  //     this.minutesnum = t
+  //     this.minutesword = '分钟后开始'
+  //     // console.log(this.minutesnum)
+  //     setTimeout(() => this.countdown(t), 60000)
+  //     this.$apply()
+  //   } else {
+  //     this.minutesnum = ''
+  //     this.minutesword = '已经开始请进入'
+  //   }
+  //   this.$apply()
+  // }
+}
+</script>
+
+<style lang="scss" type="text/scss">
+
+  @import '../../styles/variables';
+  page {
+    background-color: #f8f8f8;
+  }
+  .po-pr {
+    position: relative;
+    padding-bottom: 20rpx;
+  }
+  .banner {
+    height: 408rpx;
+
+    > image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .infobtn[plain] {
+    border: none;
+    height:40px;
+    width:40px;
+    boder-radius:0;
+    padding:0;
+
+  }
+  .user-bar {
+    position: relative;
+    margin:20px 20px 10px 20px;
+    margin-top: -24px;
+    overflow: hidden;
+    background-color: $white;
+    border-radius: 7px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+    .zan-cell {
+      &::after {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        transform: scaleY(0.5);
+      }
+    }
+
+    .inner {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+
+      .nick-name {
+        flex: 1;
+        overflow: hidden;
+      }
+    }
+    .avatar {
+      display: block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      image{
+        display: block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+    }
+    .usericon{
+      position: relative;
+      image {
+        float: right;
+        width: 220rpx;
+        height: 100rpx;
+        overflow: hidden;
+      }
+      .user_text {
+        position: absolute;
+        z-index: 10;
+        width: 220rpx;
+        height: 100rpx;
+        line-height: 100rpx;
+        font-size: 26rpx;
+        color:$white;
+        right:30rpx;
+        text-align:right;
+        .icon-zuojiantou {
+          font-size: 26rpx;
+        }
+      }
+    }
+  }
+
+  .section {
+    margin-bottom: 0;
+    // background-color: $white;
+  }
+  .box {
+    display: flex;
+    padding: 10rpx 20rpx 0 20rpx;
+    image{
+      display: block;
+    }
+    .icon.icon-zuojiantou {
+      font-size: 22rpx;
+      padding-left:10rpx;
+    }
+    .box1 {
+      width: 50%;
+      padding-right:10rpx;
+
+      .img1 {
+        width: 100%;
+        /*margin: 10rpx;*/
+        height: 440rpx;
+      }
+      .img3 {
+        width: 100%;
+        /*margin: 10rpx;*/
+        height: 200rpx;
+      }
+
+    }
+    .box2 {
+      width: 50%;
+      padding-left:10rpx;
+
+      .img2 {
+        width: 100%;
+        /*margin: 10rpx;*/
+        height: 280rpx;
+      }
+      .img4 {
+        width: 100%;
+        /*margin: 10rpx;*/
+        height: 360rpx;
+      }
+      .img6 {
+        width: 100%;
+        height: 210rpx;
+      }
+      .img8 {
+        width: 100%;
+        height: 200rpx;
+      }
+    }
+    .text-box {
+      position: absolute;
+      top: 24rpx;
+      left: 40rpx;
+      z-index: 10;
+      color: $white;
+      h3{
+        font-size: 36rpx;
+      }
+      text.wz {
+        display: block;
+        font-size: 22rpx;
+      }
+      .button {
+        margin-top: 14rpx;
+        margin-left: -10rpx;
+        padding: 4px 10px;
+        border-radius: 100px;
+        overflow:hidden;
+        width: 130rpx;
+        font-size: 24rpx;
+        background-color: rgba(255,255,255,.4);
+      }
+    }
+    }
+  .no-bd-top {
+    padding: 0 20rpx 10rpx 20rpx;
+  }
+    .box3 {
+      width: 100%;
+      /*padding: 10rpx;*/
+      .img5 {
+        width: 100%;
+        height: 200rpx;
+      }
+  }
+</style>

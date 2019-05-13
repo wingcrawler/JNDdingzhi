@@ -1,0 +1,110 @@
+<template>
+  <view class="container {{fexid?'fexid':''}}">
+
+    <view class="content-padded ">
+      <image class="logo" src="../../images/home/video.png"></image>
+    </view>
+
+    <view style="padding: 0 30px">
+
+      <view class="content-padded">
+
+        <view class="zan-hairline--bottom">
+          <view class="zan-cell zan-field">
+            <input class="zan-field__input zan-cell__bd name"  placeholder="请输入会议码" value="{{name}}" maxlength="11" type="number" @input="userInput('enteringPassword')" />
+          </view>
+        </view>
+
+      </view>
+      <view class="content-padded">
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="submit">登录</button>
+      </view>
+
+    </view>
+
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {validate} from '@/utils/validate' // 用户输入表单的验证
+  import {MEETINGH5URL} from '@/utils/constants'
+  export default class enterMeeting extends wepy.page {
+    config = {
+      navigationBarTitleText: '在线调解'
+    }
+
+    data = {
+      enteringPassword: ''
+    }
+    // 用户输入表单验证
+    validate() {
+      return validate({
+        enteringPassword: {
+          required: '请输入会议密码'
+        },
+      }, this)
+    }
+
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+
+    methods = {
+      // 用户输入
+      userInput(field, {detail}) {
+        this[field] = detail.value
+        this.$apply()
+      },
+      submit() {
+        if (this.validate()) {
+          let url = encodeURIComponent(`${MEETINGH5URL}${this.enteringPassword}`)
+          return wx.navigateTo({url: `/pages/webview/webview?url=${url}&type='enterMeeting'`})
+          // console.log(this.enteringPassword)
+        }
+      }
+    }
+  }
+
+</script>
+
+<style lang="scss" type="text/scss">
+  @import "../../styles/variables";
+  page{
+    width: 100vm;
+  }
+  .logo {
+    width: 230rpx;
+    height: 230rpx;
+    margin: 100rpx auto 60rpx;
+    display: block;
+  }
+  .fexid{
+    position: absolute;
+    top: -100px;
+    width: 100%;
+  }
+  .zan-field {
+    padding: 8px 10px;
+  }
+
+  .zan-field__input {
+    padding: 3px 0;
+    min-height: 30px;
+    height: auto;
+  }
+  .zan-font-20{
+    font-size: 36rpx;
+  }
+  .zan-pull-left, .zan-pull-right {
+    color: $primary-color;
+  }
+</style>

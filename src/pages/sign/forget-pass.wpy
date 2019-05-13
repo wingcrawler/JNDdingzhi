@@ -1,0 +1,222 @@
+<template>
+  <view class="container">
+    <view class="zan-panel" style="margin-top: 0">
+
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">手机号</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入手机号" maxlength="11" @input="userInput('phone')" type="number" />
+        <view class="zan-cell__ft">
+          <button class="zan-btn zan-btn--mini bgcolor" disabled="{{disable}}" @tap="sendmessg">{{getmsg}}</button>
+        </view>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">验证码</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入验证码" type="number" @input="userInput('msg')" maxlength="6"/>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">密码</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入新码" type="number" @input="userInput('pass')" maxlength="20"/>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">重复密码</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请重复输入上面密码" type="number" @input="userInput('passtow')" maxlength="20"/>
+      </view>
+      <view class="zan-cell zan-field">
+        <view class="zan-cell__hd zan-field__title">证件号码</view>
+        <input class="zan-field__input zan-cell__bd" placeholder="请输入证件号码" type="number" @input="userInput('cardnum')" maxlength="18"/>
+      </view>
+    </view>
+
+    <view class="btnbox">
+
+      <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="modifypass">提交</button>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {validate, patterns} from '@/utils/validate'
+  import {sendSMSVerificationCode, forgetPassword} from '@/api/sign'
+  import {hexMD5} from '@/utils/md5'
+
+  export default class ForgetPass extends wepy.page {
+    config={
+      navigationBarTitleText: '忘记密码'
+    }
+    data={
+      phone: '',
+      msg: '',
+      pass: '',
+      passtow: '',
+      cardnum: '',
+      getmsg: '获取验证码',
+      disable: false,
+      loading: false
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+    methods={
+      // 用户输入
+      userInput(field, {detail}) {
+        this[field] = detail.value
+        this.$apply()
+      },
+      sendmessg() {
+        if (this.validate(true)) {
+          wx.showLoading()
+          sendSMSVerificationCode({
+            smstype: '1',
+            phone: this.phone
+          }).then(() => {
+            wx.hideLoading()
+            wx.showToast({title: '短信验证码已发送至您的手机，请注意查收！', icon: 'none'})
+            this.countdown()
+          }).catch(() => {
+            wx.hideLoading()
+          })
+        }
+      },
+      modifypass() {
+        if (this.validate()) {
+          this.loading = true
+          forgetPassword({
+            method: 'GET',
+            phone: this.phone,
+            smscode: this.msg,
+            sid: '12122113333332',
+            password: hexMD5(this.pass),
+            repeated: hexMD5(this.passtow),
+            zjhm: this.cardnum,
+          }).then((data = {}) => {
+            console.log(data)
+            if (data.code !== 200) {
+              return wx.showToast({title: data.message, icon: 'none'})
+            }
+            wx.showModal({
+              content: '修改成功,请登录',
+              showCancel: false,
+              success(res) {
+                if (res.confirm) {
+                  wx.navigateBack({
+                    delta: 1
+                  })
+                }
+              }
+            })
+          }).catch(() => {
+            this.loading = false
+          })
+          this.loading = false
+        }
+      }
+    }
+    // 倒计时
+    countdown(t = 60) {
+      if (--t > 0) {
+        this.disable = true
+        this.getmsg = `${t}s后再次发送`
+        setTimeout(() => this.countdown(t), 1000)
+      } else {
+        this.getmsg = '再次获取验证码'
+        this.disable = false
+      }
+      this.$apply()
+    }
+
+    validate(isBreak) {
+      let valid = validate({
+        phone: {
+          required: '请输入手机号',
+          pattern: patterns.phone,
+          message: '请输入正确的手机号'
+        }
+      }, this)
+
+      if (isBreak) {
+        return valid
+      }
+      if (valid) {
+        valid = validate({
+          msg: {
+            required: '请输入验证码',
+          },
+          pass: {
+            required: '请输入密码',
+            patterns: [{
+              pattern: patterns.passwd,
+              message: '请输入8~20位数字、字母'
+            }]
+          },
+          passtow: {
+            required: '请再次输入密码',
+            pattern: val => val === this.pass,
+            message: '两次输入的密码不一致，请重新输入'
+          },
+          cardnum: {
+            required: '请输入证件号码'
+          }
+        }, this)
+      }
+      return valid
+    }
+  }
+</script>
+
+<style lang="scss" type="text/scss">
+  @import '../../styles/variables.scss';
+  .container{
+    background-color:$white;
+  }
+  .zan-btn--mini{
+    font-size: 12px;
+  }
+  .zan-field {
+    padding: 0 15px;
+  }
+  .zan-field__title {
+    color: #333;
+    min-width: 65px;
+    padding-right: 10px;
+    font-size: 28rpx;
+    font-weight: bold;
+  }
+  .text-right{
+    text-align: right;
+  }
+  .zan-field__input {
+    flex: 1;
+    line-height: 70rpx;
+    padding: 10px 0;
+    min-height: 70rpx;
+    height: 70rpx;
+    font-size: 28rpx;
+  }
+  .btnbox{
+    width: 80%;
+    margin: 25px auto;
+  }
+  .bgcolor{
+    background-color: $white;
+    border: 1px solid $orange;
+    color: $orange;
+    height:30px;
+    line-height:30px;
+    // width: 178rpx;
+    // height: 58rpx;
+  }
+  /* .bgc {
+    background-color: #f5ae2d;
+    border: 1px solid;
+    border-radius: 5px;
+  } */
+</style>

@@ -1,0 +1,35 @@
+<template>
+  <view class="loadingBg" @touchmove.stop=''>
+    <view class="loadingBox">
+      <image src="/images/intelligentConsult/loading.gif"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class loading extends wepy.component {
+}
+</script>
+
+<style lang="scss" type="text/scss">
+.loadingBg{
+  width:100%;
+  height:100%;
+  position: fixed;
+  top:0;
+  left:0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .loadingBox{
+    width: 180rpx;
+    height:114rpx;
+    image{
+      width: 180rpx;
+      height:114rpx;
+    }
+  }
+}
+</style>

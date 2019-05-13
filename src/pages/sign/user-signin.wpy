@@ -1,0 +1,280 @@
+<template>
+  <view class="container {{fexid?'fexid':''}}">
+    <view class="sign-type">
+      <view class="chose-type" @tap="choseTpye('fir')"><view wx:if="{{changeType == 'fir'}}" class="under-line"></view>当事人/代理人</view>
+      <!--<view class="chose-type next" @tap="choseTpye('sec')"><view wx:if="{{changeType == 'sec'}}" class="under-line"></view>调解员</view>-->
+    </view>
+    <!--<view class="content-padded ">-->
+      <!--<image class="logo" src="../../images/sign/logo.png"></image>-->
+    <!--</view>-->
+
+    <view style="padding: 100rpx 30px 60rpx 30px">
+
+      <view class="content-padded">
+
+        <view class="zan-hairline--bottom">
+          <view class="zan-cell zan-field">
+            <view class="zan-cell__icon icon iconshenfenzheng text-gray"></view>
+            <input class="zan-field__input zan-cell__bd name"  placeholder="身份证号/营业执照证号/律师证号" value="{{name}}" maxlength="20" type="text" @input="userInput('name')" />
+          </view>
+        </view>
+
+        <view class="zan-hairline--bottom">
+          <view class="zan-cell zan-field">
+            <view class="zan-cell__icon icon iconsuo zan-font-20 text-gray"></view>
+            <input password="true"  class="zan-field__input zan-cell__bd pass"
+                   placeholder="请输入密码"
+                   value="{{pass}}"
+                   @blur="handleBlur"
+                   @focus="handleFocus"
+                   @input="userInput('pass')"
+                   maxlength="20"
+            />
+          </view>
+        </view>
+        <view class="zan-clearfix t">
+          <navigator class="zan-pull-left" url="signup-step1">立即注册</navigator>
+          <navigator url="forget-pass" class="zan-pull-right">忘记密码？</navigator>
+        </view>
+      </view>
+
+
+      <view class="content-padded">
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="submit">登录</button>
+      </view>
+    </view>
+    <!--<view class="zan-clearfix content-padded fixed-bar&#45;&#45;footer">-->
+      <!--<navigator class="zan-pull-left" url="signup">律师扫码登录</navigator>-->
+      <!--<navigator url="mediator-judge" class="zan-pull-right">调解员/法官登录</navigator>-->
+    <!--</view>-->
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {userSignin} from '@/api/sign' // 引入登录接口
+  import {validate, patterns} from '@/utils/validate' // 用户输入表单的验证
+  import MD5 from '@/utils/md5'
+  import {saveUuid, hasUuid, getUuid, saveUserInfo, saveToken} from '@/utils/utils' // 保存登录后的token,用户信息
+  import {setItem, getItem} from '@/utils/storage'
+  import makeUuid from '@/utils/uuid'
+  let Base64 = require('../../utils/base.js')
+
+  export default class UserSignIn extends wepy.page {
+    config = {
+      navigationBarTitleText: '登录'
+    }
+
+    data = {
+      name: '',
+      pass: '',
+      goBack: false,
+      loading: false,
+      isAndroid: false,
+      fexid: false,
+      changeType: 'fir',
+      uuid: '',
+      // hasToken: hasToken()
+    }
+    // 用户输入表单验证
+    validate() {
+      return validate({
+        name: {
+          required: '请输入登录账号',
+        },
+        pass: {
+          required: '请输入8~20位数字、字母',
+          patterns: [{
+            pattern: patterns.passwd,
+            message: '请输入8~20位数字、字母'
+          }]
+        }
+      }, this)
+    }
+    onLoad({back}) {
+      this.goBack = !!back
+      try {
+        let res = wx.getSystemInfoSync()
+        let sys = res.system.indexOf('Android')
+        if (sys > -1) {
+          this.isAndroid = true
+          this.$apply()
+        }
+      } catch (e) {
+        // Do something when catch error
+      }
+      // getPublicKey().then((data) => {
+      //   publicKey = data
+      //   console.log(publicKey)
+      // })
+      this.$apply()
+    }
+    onShow() {
+      this.haveUuid = hasUuid()
+      if (this.haveUuid) {
+        this.uuid = getUuid()
+      } else {
+        this.uuid = makeUuid(8, 16)
+        saveUuid(this.uuid)
+      }
+      getItem('name').then((data = {}) => {
+        this.name = data.data
+      }).catch(() => {
+        this.name = ''
+      })
+      getItem('pwd').then((data = {}) => {
+        this.pass = data.data
+      }).catch(() => {
+        this.pass = ''
+      })
+      // this.hasToken = hasToken()
+      this.$apply()
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '北京法院多元调解与速裁平台',
+        imageUrl: '/images/home/icon.jpg',
+        path: '/pages/home/home'
+      }
+    }
+    methods = {
+      handleFocus() {
+        if (this.isAndroid) {
+          this.fexid = true
+          this.$apply()
+        }
+      },
+      handleBlur() {
+        this.fexid = false
+        this.$apply()
+      },
+      // 用户输入
+      userInput(field, {detail}) {
+        this[field] = detail.value
+        this.$apply()
+      },
+      choseTpye(type) {
+        this.changeType = type
+      },
+      submit() {
+        if (this.validate()) {
+          this.loading = true
+          userSignin({
+            username: this.name,
+            password: MD5(this.pass),
+            sid: this.uuid,
+            token: true
+          })
+            .then((data = {}) => {
+              this.loading = false
+              console.log(data)
+              // 登录成功 保存token
+              setItem('name', this.name)
+              setItem('pwd', this.pass)
+              saveToken(data.oken)
+              // // 保存用户信息
+              let userInfo = JSON.parse(Base64.decode(data.credential))
+              console.log(userInfo)
+              saveUserInfo(userInfo)
+                // 后退
+              if (this.goBack) {
+                wx.navigateBack()
+              } else {
+                wx.reLaunch({
+                  url: '/pages/home/home'
+                })
+              }
+            }).catch((err) => {
+            // let uesrInfo = JSON.parse(Base64.decode(data.credential))
+            // saveUserInfo(uesrInfo)
+              console.log(err.authentication_message[0])
+              if (err.authentication_message[0] === 'authenticationFailure.EmptyResultDataAccessException') {
+                this.loading = false
+                this.$apply()
+                return wx.showToast({title: '未查到此账号', icon: 'none'})
+              }
+              wx.showToast({title: err.authentication_message[0], icon: 'none'})
+              this.loading = false
+              this.$apply()
+            })
+        }
+      }
+    }
+  }
+
+</script>
+
+<style lang="scss" type="text/scss">
+  @import "../../styles/variables";
+  page{
+    width: 100vm;
+  }
+  .sign-type {
+    width: 100%;
+    height: 90rpx;
+    border-bottom: 1rpx solid #E8E8E8;
+  }
+  .zan-cell__icon {
+    width: 24px;
+    text-align: center;
+  }
+
+  .chose-type {
+    width: 100%;
+    height: 90rpx;
+    text-align: center;
+    line-height: 90rpx;
+    margin-top: 5rpx;
+  }
+  .under-line1 {
+    width: 140rpx;
+    height: 5rpx;
+    background-color: #AD3320;
+    position: absolute;
+    left: 50%;
+    bottom: 0rpx;
+    transform: translate(-50%, 5rpx);
+  }
+  .next {
+    border-left: 1rpx solid #E8E8E8;
+  }
+  .logo {
+    width: 460rpx;
+    height: 230rpx;
+    margin: 100rpx auto 60rpx;
+    display: block;
+  }
+  .fexid{
+    position: absolute;
+    top: -100px;
+    width: 100%;
+  }
+  .zan-field {
+    padding: 8px 10px;
+  }
+  .t {
+    margin-top: 30rpx;
+    margin-left: 3rpx;
+  }
+  .zan-field__input {
+    padding: 3px 0;
+    min-height: 30px;
+    height: auto;
+  }
+  .zan-font-20{
+    font-size: 36rpx;
+  }
+  .zan-pull-left, .zan-pull-right {
+    color: $primary-color;
+  }
+  .fixed-bar--footer {
+    position: fixed;
+    bottom: 40rpx;
+    width: 100%;
+    box-sizing:border-box;
+  }
+</style>
