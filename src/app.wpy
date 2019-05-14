@@ -8,98 +8,22 @@ export default class ODR extends wepy.app {
     pages: [
       // 首页
       'pages/home/home', // 首页
-      'pages/intelligentConsult/intelligentConsult', // 智能咨询
-      'pages/intelligentConsult/legalKnowledge', // 法律知识
-      'pages/intelligentConsult/relateCase', // 相关案例
-      // 'pages/intelligentConsult/disputeResolution', // 解纷方式
-      // 'pages/intelligentConsult/assistiveTools', // 诉讼计算器
-      'pages/intelligentConsult/instrumentTemplate', // 文书样式
-
-      // 评估
-      // 'pages/assessment/assessment-add', // 创建当事人信息
-      // 'pages/assessment/assessment-step', // 创建评估
-      // 'pages/assessment/success', // 创建评估提交成功
-
-      // 调解
-      // 'pages/mediate/mediation-records', // 申请调解-调解笔录
-      // 'pages/mediate/chat', // 申请调解-视频调解-私聊调解员
 
       // 个人中心
       'pages/user/user', // 个人账户
       'pages/user/case-list', // 证据材料列表
-      // 'pages/user/modify-password', // 修改密码
-      // 'pages/user/modify-mobile', // 修改绑定手机
-      // 'pages/user/modify-email', // 修改绑定邮箱
-      // 'pages/user/my-consultation', // 我的咨询
-      'pages/user/my-mediate', // 我的调解 '
-      'pages/user/enter-meeting', // 注册
-      'pages/user/add-material', // 添加证据材料
-      'pages/home/real-name-authentication', // 实名校验第一步 身份证号码
-      // 'pages/user/select-consultion', // 选择咨询师
-      // 'pages/user/submit-comments', // 评价调解员
-      // 'pages/user/help-center', // 新手指南
-
-      // 调解服务
-      // 'pages/mediate-service/dispute-mediation', // 纠纷调解 主页
-      // 'pages/mediate-service/dispute-details', // 纠纷调解 填写纠纷详情
-      // 'pages/mediate-service/dispute-applicant', // 纠纷调解 填写申请人信息
-      // 'pages/mediate-service/set-dispute', // 纠纷调解 添加申请/被申请人
-      // 'pages/mediate-service/apply-success', // 纠纷调解 申请成功
-      // 'pages/mediate-service/apply-search', // 纠纷调解 调节机构
-      // 'pages/mediate-service/material', // 纠纷调解 证据材料
-      // 'pages/mediate-service/material-add', // 纠纷调解 添加证据材料
-      // 'pages/mediate-service/autograph-confirm', // 纠纷调解 签名确认
-      // 'pages/mediate-service/document', // 申请调解-相关文书
-      // 'pages/mediate-service/user-type', // 用户类别
 
       // 登录注册
       'pages/sign/user-signin', // 登录
-      'pages/sign/signup-step1', // 注册第一步
-      'pages/sign/signup-step2', // 注册第二步
-      'pages/sign/signup-step3', // 注册第三步
       'pages/sign/signup', // 注册
       'pages/sign/forget-pass', // 忘记密码
-      'pages/sign/mediator-judge', // 调解员-法官登录
       // 'pages/sign/modify-password', // 修改密码
-
-      // 服务资源
-      // 'pages/resources/consultant', // 咨询师
-      // 'pages/resources/mediator', // 调解员
-      // 'pages/resources/mediator-comments', // 调解员评论
-      // 'pages/resources/details', // 机构详情
-      // // 'pages/resources/arbitration', // 仲裁机构
-      // 'pages/resources/court', // 法院
-      // 'pages/resources/public-lawyers', // 公益律师
-      // 'pages/resources/lawyerInfo', // 公益律师详情
-      // 'pages/resources/ecaluate-details', // 评价详情
-      //
-      // // 诉讼服务
-      // 'pages/litigation-service/case-notice',
-      // 'pages/litigation-service/apply-litigation', // 申请诉讼
-      // 'pages/litigation-service/search-court', // 法院
-      // 'pages/litigation-service/search-cause', // 案由
-      // 'pages/litigation-service/contact-list',
-      // 'pages/litigation-service/contact-info',
-      // 'pages/litigation-service/litigation-mediate',
-      // 'pages/litigation-service/add-success', // 申请诉讼成功
-      // // 'pages/litigation-service/litigation-details',
-      //
-      // // 申请司法确认
-      // 'pages/judicial-confirmation/judicial-form', // 申请司法确认填写表格
-      // 'pages/judicial-confirmation/judicial-list', // 申请司法确认-添加当事人
-      // 'pages/judicial-confirmation/judicial-info', // 申请司法确认-编写当事人信息
-      // 'pages/judicial-confirmation/judicial-mediate', // 申请司法确认-材料列表
-      // 'pages/judicial-confirmation/judicial-add', // 申请司法确认-添加材料
-      //
-      // 'pages/webrtcroom/room/room', // 视频
-      'pages/court-guide/court-guide',
-      'pages/court-guide/court-stails',
 
       // common
       'pages/webview/webview' // webview
     ],
     window: {
-      navigationBarBackgroundColor: '#ba261b'
+      navigationBarBackgroundColor: '#fff'
     },
     // plugins: {
     //   WechatSI: {
