@@ -22,17 +22,35 @@ export default class ODR extends wepy.app {
       // common
       'pages/webview/webview' // webview
     ],
-    window: {
-      navigationBarBackgroundColor: '#fff'
+    tabBar: {
+      color: '#757c86',
+      borderStyle: 'black',
+      selectedColor: '#009bff',
+      list: [
+        {
+          pagePath: 'pages/home/home',
+          text: '首页',
+          iconPath: 'images/home/index.png',
+          selectedIconPath: 'images/home/index1.png'
+        },
+        {
+          pagePath: 'pages/home/home',
+          text: '联系客服',
+          iconPath: 'images/home/help.png',
+          selectedIconPath: 'images/home/help1.png'
+        },
+        {
+          pagePath: 'pages/home/home',
+          text: '我的',
+          iconPath: 'images/home/my.png',
+          selectedIconPath: 'images/home/my1.png'
+        },
+      ]
     },
-    // plugins: {
-    //   WechatSI: {
-    //     version: '0.2.2',
-    //     provider: 'wx069ba97219f66d99'
-    //   }
-    // },
-    // appid: 'wx7fbe2e968dd39ffd',
-    // debug: true
+    window: {
+      navigationBarBackgroundColor: '#fff',
+      navigationBarTextStyle: 'black',
+    },
   }
   constructor () {
     super()
