@@ -1,0 +1,96 @@
+<template>
+  <view class="container">
+    <image class="topimg" src="/images/home/lxkfimg.jpg"></image>
+    <view class="kfbox">
+      <view class="zan-cell zan-field zan-cell__no-pading">
+        <view class="zan-cell__icon"><image src="/images/home/lxkf1.png"></image></view>
+        <view class="zan-cell__bd zan-font-bold zan-font-16">用户须知</view>
+      </view>
+      <view class="wzxx">用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户须知用户
+        须知用户须知用户须知用户须知用须知用户须知用户须知
+        用户须知用户须知用户须知用户须知用户须知用户须知户
+        须知用户须知用户须知用户须知用户须知</view>
+      <view class="zan-cell zan-field zan-cell__no-pading">
+        <view class="zan-cell__icon"><image src="/images/home/lxkf2.png"></image></view>
+        <view class="zan-cell__bd zan-font-bold zan-font-16">客服电话</view>
+      </view>
+      <view class="wzxx">+86 010-1234576886</view>
+      <view class="zan-cell zan-field zan-cell__no-pading">
+        <view class="zan-cell__icon"><image src="/images/home/lxkf3.png"></image></view>
+        <view class="zan-cell__bd zan-font-bold zan-font-16">客服微信</view>
+      </view>
+      <view class="wzxx">1234576886</view>
+    </view>
+    <button class="zan-btn zan-btn--primary">留言</button>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {getItem} from '@/utils/storage'
+export default class User extends wepy.page {
+  config={
+    navigationBarTitleText: '联系客服'
+  }
+
+  data={
+
+  }
+
+  computed = {
+    // 默认头像
+    // return '/images/sign/avatar_default.png'
+  }
+
+  methods={
+  }
+
+  onShow() {
+    getItem('wxUserInfo').then((data) => {
+      // console.log(data.data)
+      this.showName = data.data.nickName
+      this.imgUrl = data.data.avatarUrl
+      this.$apply()
+      console.log(this.showName)
+    }).catch(() => {
+      this.showName = '微信用户'
+      console.log(this.showName)
+    })
+  }
+}
+
+</script>
+
+<style lang="scss" type="text/scss">
+  @import "../../styles/variables";
+  .topimg {
+    width: 100vw;
+    height: 366rpx;
+    display: block;
+  }
+  .kfbox {
+    padding: 50rpx;
+    background-color: white;
+    .zan-cell__icon image{
+      width: 44rpx;
+      height: 44rpx;
+      display: block;
+    }
+    .wzxx {
+      font-size: 28rpx;
+      padding-top: 20rpx;
+      padding-bottom: 30rpx;
+    }
+  }
+  .zan-cell {
+    position: unset;
+  }
+  .zan-cell__no-pading {
+    padding: 0;
+  }
+  .zan-btn {
+    border-radius: 100rpx;
+    width: 90vw;
+    margin: 40rpx auto;
+  }
+</style>

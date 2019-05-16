@@ -1,31 +1,43 @@
 <template>
-  <view class="have-fun">
-    <view class="hah">
-      <image class="photo" src="{{imgUrl}}"></image>
-      <view class="name">{{showName}}</view>
-    </view>
-    <view class="sth">
-      <view class="pad">
-        <view @tap="go('mediate')">
-          <view class="inline">我的案件</view>
-          <view class="inline fx">件数<text class="red" decode="{{true}}">  0  </text>></view>
-        </view>
-        <view class="line"></view>
-        <view @tap="go('caselist')">
-          <view class="inline">证据查看</view>
-          <view class="inline fx">数量<text class="red" decode="{{true}}">  0  </text>></view>
-        </view>
-        <view class="line"></view>
-        <view @tap="go('caselist')">
-          <view class="inline">多远调解案件</view>
-          <view class="inline fx">数量<text class="red" decode="{{true}}">  0  </text>></view>
-        </view>
+  <view class="container">
+    <view class="topbg">
+      <view class="avatar">
+        <image src="{{imgUrl}}" class="tximg"></image>
+        <view class="name">摄政王</view>
+        <view class="vipname"><image src="{{hyleveimgUrl}}" class="hyicon"></image> 黄金VIP</view>
       </view>
     </view>
-  </view>
-  <view class="out" @tap="out">
-    <view class="icon icon-shutDown inline ic"></view>
-    <view class="inline top-pos">退出登录</view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-field zan-cell--access">
+        <view class="zan-cell__icon"><image src="/images/home/myicon1.png"></image></view>
+        <view class="zan-cell__bd">我的订单</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <view class="zan-cell zan-field zan-cell--access">
+        <view class="zan-cell__icon"><image src="/images/home/myicon2.png"></image></view>
+        <view class="zan-cell__bd">我的模板</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <view class="zan-cell zan-field zan-cell--access">
+        <view class="zan-cell__icon"><image src="/images/home/myicon3.png"></image></view>
+        <view class="zan-cell__bd">我的积分</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+    </view>
+      <view class="zan-panel">
+        <view class="zan-cell zan-field zan-cell--access">
+          <view class="zan-cell__icon"><image src="/images/home/myicon4.png"></image></view>
+          <view class="zan-cell__bd">每日打卡</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell zan-field zan-cell--access">
+          <view class="zan-cell__icon"><image src="/images/home/myicon5.png"></image></view>
+          <view class="zan-cell__bd">用户反馈</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+      </view>
   </view>
 </template>
 
@@ -34,12 +46,13 @@ import wepy from 'wepy'
 import {removeItem, getItem} from '@/utils/storage'
 export default class User extends wepy.page {
   config={
-    navigationBarTitleText: '个人中心'
+    navigationBarTitleText: '我的'
   }
 
   data={
     showName: '',
-    imgUrl: '/images/sign/avatar_default.png'
+    imgUrl: '/images/sign/avatar_default.png',
+    hyleveimgUrl: '/images/home/hyleve.png'
   }
 
   computed = {
@@ -48,33 +61,6 @@ export default class User extends wepy.page {
   }
 
   methods={
-    go(a) {
-      // console.log((a));
-      if (a === 'caselist') {
-        return wx.navigateTo({
-          url: `/pages/user/case-list`
-        })
-      }
-      wx.navigateTo({
-        url: `/pages/user/my-mediate?data=${encodeURIComponent(JSON.stringify(a))}`
-      })
-    },
-    // 用户点击退出按钮
-    out() {
-      wx.showModal({
-        content: '您确定要退出该账号吗？',
-        success: function({confirm}) {
-          if (confirm) {
-            removeItem('name')
-            removeItem('pwd')
-            removeItem('wxUserInfo')
-            removeItem('userInfo')
-            removeItem('uuid_value')
-            wx.reLaunch({url: '/pages/home/home?id=1'})
-          }
-        }
-      })
-    }
   }
 
   onShow() {
@@ -95,94 +81,43 @@ export default class User extends wepy.page {
 
 <style lang="scss" type="text/scss">
   @import "../../styles/variables";
-  .have-fun {
-    position: absolute;
-    width: 80%;
-    height: 560rpx;
-    background-color: white;
-    left: 50%;
-    top: 200rpx;
-    transform: translate(-50%, 0);
-    border-radius: 10rpx;
+  .topbg {
+    width: 100vw;
+    height: 370rpx;
+    background: linear-gradient(to right, #3123ae, #529efc);
+    padding-top: 50rpx;
+    .avatar {
+      margin:0 auto;
+      width: 160rpx;
+      text-align: center;
+      .name {
+        font-size: 40rpx;
+        color: $white;
+        padding: 10rpx 0;
+      }
+      .vipname {
+        color: #fff207;
+      }
+      .tximg {
+        width: 160rpx;
+        height: 160rpx;
+        overflow: hidden;
+        border-radius: 160rpx;
+        border: 2px solid $gray-light;
+        display: block;
+      }
+      .hyicon {
+        width: 27rpx;
+        height: 24rpx;
+      }
+    }
   }
-  .photo {
-    width: 160rpx;
-    height: 160rpx;
-    border-radius: 160rpx;
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  .zan-field {
+    padding: 15px;
   }
-  .pad {
-    padding: 20rpx;
-  }
-  .red {
-    color: #AB3426;;
-  }
-  .inline {
-    display: inline-block;
-    height: 120rpx;
-    font-size: 30rpx;
-    line-height: 120rpx;
-  }
-  .fx {
-    position: absolute;
-    right: 20rpx;
-  }
-  .line {
-    width: 100%;
-    height: 2rpx;
-    background-color: #D3D3D3;
-    margin-top: 10rpx;
-  }
-  .sth {
-    width: 80%;
-    height: 385rpx;
-    left: 50%;
-    position:absolute;
-    transform: translate(-50%, 0);
-    bottom: 5rpx;
-  }
-  .out {
-    position: absolute;
-    width: 90%;
-    border-radius: 10rpx;
-    height: 80rpx;
-    background-color:  #AB3426;
-    color: white;
-    // line-height: 50rpx;
-    font-size: 24rpx;
-    top: 76%;
-    left: 50%;
-    transform: translate(-50%, 0);
-    text-align: center;
-  }
-  .hah {
-    width: 180rpx;
-    height: 180rpx;
-    left: 50%;
-    transform: translate(-50%, 0);
-    position: absolute;
-  }
-  // .inline {
-  //   display: inline;
-  //   vertical-align: middle;
-  // }
-  .top-pos {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-20rpx, -50%);
-  }
-  .ic {
-    position: absolute;
-    top: 50%;
-    left: 40%;
-    transform: translate(0%, -50%);
-    // transform: translate(-10%, -50%);
-  }
-  .name {
-    margin-top: 100rpx;
-    text-align: center;
+  .zan-cell__icon image{
+    width: 34rpx;
+    height: 38rpx;
+    display: block;
   }
 </style>

@@ -11,7 +11,9 @@ export default class ODR extends wepy.app {
 
       // 个人中心
       'pages/user/user', // 个人账户
-      'pages/user/case-list', // 证据材料列表
+
+      // 联系客服
+      'pages/contact-service/contact-service', // 联系客服
 
       // 登录注册
       'pages/sign/user-signin', // 登录
@@ -34,13 +36,13 @@ export default class ODR extends wepy.app {
           selectedIconPath: 'images/home/index1.png'
         },
         {
-          pagePath: 'pages/home/home',
+          pagePath: 'pages/contact-service/contact-service',
           text: '联系客服',
           iconPath: 'images/home/help.png',
           selectedIconPath: 'images/home/help1.png'
         },
         {
-          pagePath: 'pages/home/home',
+          pagePath: 'pages/user/user',
           text: '我的',
           iconPath: 'images/home/my.png',
           selectedIconPath: 'images/home/my1.png'

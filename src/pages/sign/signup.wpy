@@ -1,56 +1,39 @@
 <template>
   <view class="container">
-    <view class="zan-panel" style="margin-top: 0">
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>姓名：</view>
-        <input class="zan-field__input zan-cell__bd" value="{{username}}" placeholder="请输入您的姓名" type="text" @input="userInput('username')" />
-      </view>
-      <view class="zan-cell zan-cell--access">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>证件类型：</view>
-        <view class="zan-cell__bd">
-          <view >居民身份证</view>
-          <!-- <view wx:else class="gray-dark text-rgt">请选择</view> -->
+    <view class="dlbox">
+      <view class="content-padded">
+        <view class="zan-cell zan-field" style="justify-content: space-between;border: none">
+          <view class="tx">
+            <image src="/images/sign/avatar_default.png"></image>
+          </view>
+          <image class="addbtn" src="/images/sign/iconadd.png"></image>
         </view>
-        <view class="zan-cell__ft"></view>
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>证件号码：</view>
-        <input class="zan-field__input zan-cell__bd" value="{{idcard}}" placeholder="请输入您的身份证号" type="idcard" @input="userInput('idcard')" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>户籍地址：</view>
-        <input class="zan-field__input zan-cell__bd" value="{{adress}}" placeholder="请输入您的户籍地址" @input="userInput('adress')" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>电子邮箱：</view>
-        <input class="zan-field__input zan-cell__bd" value="{{email}}" placeholder="请输入您的电子邮箱" @input="userInput('email')" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>登录密码：</view>
-        <input class="zan-field__input zan-cell__bd" placeholder="8-12位数字、字母" type="password" @input="userInput('pass')" maxlength="16" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>确认密码：</view>
-        <input class="zan-field__input zan-cell__bd" placeholder="请与上方密码保持一致" type="password" @input="userInput('passconfirm')" maxlength="16" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>手机号：</view>
-        <input class="zan-field__input zan-cell__bd" placeholder="请输入手机号" maxlength="11" type="number" @input="userInput('phone')" />
-      </view>
-      <view class="zan-cell zan-field">
-        <view class="zan-cell__hd zan-field__title"><text class="red">*</text>验证码：</view>
-        <input class="zan-field__input zan-cell__bd" placeholder="请输入验证码"  type="number" @input="userInput('msg')" maxlength="6"/>
-        <view class="zan-cell__ft">
-          <button class="zan-btn zan-btn&#45;&#45;mini zan-btn&#45;&#45;primary" @tap="sendmessg" disabled="{{disable}}">{{getmsg}}</button>
+        <view class="zan-cell zan-field">
+          <input class="zan-field__input zan-cell__bd" placeholder="请输入昵称" maxlength="11" @input="userInput('phone')" type="number" />
         </view>
+        <view class="zan-cell zan-field">
+          <input class="zan-field__input zan-cell__bd" placeholder="请输入手机号" maxlength="11" @input="userInput('phone')" type="number" />
+        </view>
+        <view class="zan-cell zan-field" style="padding: 0;">
+
+          <input style="padding:8px 10px;" class="zan-field__input zan-cell__bd" placeholder="请输入验证码" type="number" @input="userInput('msg')" maxlength="6"/>
+          <view class="zan-cell__ft">
+            <button class="zan-btn bgcolor" disabled="{{disable}}" @tap="sendmessg">{{getmsg}}</button>
+          </view>
+        </view>
+        <view class="zan-cell zan-field">
+          <input class="zan-field__input zan-cell__bd" placeholder="请输入密码" type="number" @input="userInput('pass')" maxlength="20"/>
+        </view>
+        <view class="zan-cell zan-field">
+          <input class="zan-field__input zan-cell__bd" placeholder="确认密码" type="number" @input="userInput('passtow')" maxlength="20"/>
+        </view>
+        <view class="zan-cell zan-field">
+          <input class="zan-field__input zan-cell__bd" placeholder="请输入邮箱" @input="userInput('email')"/>
+        </view>
+
       </view>
-    </view>
-    <view class="rad-box">
-      <radio class="rad" color='#AD3320'></radio>已阅读同意<text class="red">《用户服务协议》</text>
-    </view>
-    <view style="margin-top: 30px">
       <view class="btnbox">
-        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="submit">提交</button>
+        <button class="zan-btn zan-btn--primary {{ loading ? 'zan-btn--loading' : '' }}" disabled="{{ loading }}" @tap="modifypass">注册</button>
       </view>
     </view>
   </view>
@@ -63,9 +46,6 @@
   // import {getVerifyCode, userSignup, checkUserIsRegister, userSignin, searchCommonUser, getPublicKey} from '@/api/sign'
   // import {RZH5URL} from '@/utils/constants'
   import {setItem} from '@/utils/storage'
-  // let RSA = require('../../utils/jsencrypt.js')
-  // let publicKey = ''
-
   export default class SignUp extends wepy.page {
     config = {
       navigationBarTitleText: '注册'
@@ -92,29 +72,7 @@
       // }
     }
     onLoad() {
-      // this.agreementUrl = encodeURIComponent(`${RZH5URL}mobile/webview.html#/registerAgree`)
-      // getPublicKey().then((data) => {
-      //   publicKey = data
-      //   console.log(publicKey)
-      // })
     }
-    onShareAppMessage(res) {
-      if (res.from === 'button') {
-        // 来自页面内转发按钮
-        console.log(res.target)
-      }
-      return {
-        title: '北京法院多元调解与速裁平台',
-        imageUrl: '/images/home/icon.jpg',
-        path: '/pages/home/home'
-      }
-    }
-    // RSAEncrypt(data) {
-    //   let encryptObj = new RSA.JSEncrypt()
-    //   encryptObj.setPublicKey(publicKey)
-    //   let data2 = encryptObj.encrypt(data)
-    //   return data2
-    // }
     methods = {
       // 以下为用户输入事件
       userInput(field, {detail}) {
@@ -264,61 +222,76 @@
   page {
     position: relative;
     height: 100%;
-  }
-  .container{
-    background-color:$white;
-  }
-  .text{
-    font-size: 10px;
-    padding: 10px 15px;
-    text-align: center;
-  }
-  .zan-btn--mini{
-    font-size: 12px;
-    line-height:26px;
-    height:28px;
-  }
-  navigator {
-    display:inline-block;
-    color: #0650ba;
-  }
-
-  .topbor{
-    border-top: 10px solid $background-color;
-  }
-  .zan-field {
-    padding: 0 15px;
-  }
-  .zan-field__title {
-    color: #333;
-    min-width: 65px;
-    padding-right: 10px;
-    font-size: 28rpx;
-    font-weight: bold;
-  }
-  .text-right{
-    text-align: right;
-  }
-  .zan-field__input {
-    flex: 1;
-    line-height: 70rpx;
-    padding: 10px 0;
-    min-height: 70rpx;
-    height: 70rpx;
-    font-size: 28rpx;
-  }
-  .btnbox{
-    width: 80%;
-    margin: 10px auto;
-  }
-  .rad-box {
-    margin-top: 22rpx;
-    vertical-align: middle;
-  }
-  .rad {
-    transform:scale(0.6);
-  }
-  .red {
-    color:  #AD3320;
+    .container {
+      padding-top: 60rpx;
+      padding-bottom: 60rpx;
+    }
+    .dlbox {
+      padding-top: 50rpx;
+      width: 90vw;
+      box-shadow: 0px 0px 10px 0px rgba(34, 111, 200, 0.45);
+      background-color: #ffffff;
+      margin: 0 auto;
+      border-radius: 20px;
+      padding-bottom: 50rpx;
+    }
+    .zan-btn--mini{
+      font-size: 12px;
+    }
+    /*.zan-field__input {*/
+    /*box-sizing: border-box;*/
+    /*}*/
+    .zan-field {
+      padding: 8px 10px;
+      border: 1px solid $gray-light;
+      border-radius: 100px;
+      overflow: hidden;
+      margin-bottom: 30rpx;
+    }
+    .zan-field__title {
+      color: #333;
+      min-width: 65px;
+      padding-right: 10px;
+      font-size: 28rpx;
+      font-weight: bold;
+    }
+    .text-right{
+      text-align: right;
+    }
+    .btnbox{
+      width: 80%;
+      margin: 10px auto;
+    }
+    .bgcolor{
+      background-color: $primary-color;
+      border: none;
+      color: $white;
+      height:52px;
+      line-height:52px;
+      font-size: 12px;
+      margin-bottom: 0;
+      border-radius: 0;
+      padding: 0 20rpx;
+    }
+    .zan-btn--primary {
+      overflow: hidden;
+      border-radius: 100px;
+    }
+    .tx {
+      width: 130rpx;
+      height: 130rpx;
+      overflow: hidden;
+      border-radius: 130rpx;
+      image {
+        width: 130rpx;
+        height: 130rpx;
+        display: block;
+      }
+    }
+    .addbtn {
+      width: 50rpx;
+      height: 50rpx;
+      display: block;
+    }
   }
 </style>
